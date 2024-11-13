@@ -1,0 +1,96 @@
+<resources>
+    <string name="app_name">LiteNote</string>
+    <string name="demo">Restart</string>
+    <string name="home">Home</string>
+    <string name="overview">Overview</string>
+    <string name="setting">Settings</string>
+    <string name="all">"All "</string>
+    <string name="uncollected">Uncollected</string>
+    <string name="collected">Collected</string>
+    <string name="enjoy">Enjoy!</string>
+    <string name="next">Agree and authorize</string>
+    <string name="refuse">Refuse</string>
+    <string name="mypermissions">The permissions we use</string>
+    <string name="agree">Agree</string>
+    <string name="app_licenstion">Listening service</string>
+    <string name="isstarted">The SMS listening service is being started</string>
+    <string name="gotoapplication">SMS service is starting, tap to enter the app</string>
+    <string name="kds">Current Express Num</string>
+    <string name="unknown">Unknown Station</string>
+    <string name="reflash">Refrash</string>
+    <string name="add">Add Code</string>
+    <string name="more">Loading More</string>
+    <string name="title_activity_add_code" translatable="false">AddCodeActivity</string>
+    <string name="add_code">Add Code</string>
+    <string name="code_msg">Code Message</string>
+    <string name="code_msg_key">Please Key to your message which is include code of picking up express.</string>
+    <string name="jeixi">Parsing</string>
+    <string name="msg_is_none">The message is none, please check it.</string>
+    <string name="no_more_data">You have no more packages to pick up at the station</string>
+    <string name="msg_is_not_pickup_code">The Message have not the pickup code.</string>
+    <string name="system_error">System Error</string>
+    <string name="msg_is_pickup_code">Parsing success</string>
+    <string name="yz">It is been resolved to the station</string>
+    <string name="yz_name">Courier station</string>
+    <string name="yz_local_name">The localtion of Courier station</string>
+    <string name="yz_info">If the item is None, you can key to the station name and local and click button, it can auto-parsing at next parsing.</string>
+    <string name="add_btn">Add</string>
+    <string name="yz_name_is_none">Courier name is empty</string>
+    <string name="yz_local_name_is_none">Courier localtion is empty</string>
+    <string name="add_success">Succeed</string>
+    <string name="kd">It is been resolved to the express</string>
+    <string name="kd_info">If the item is None, you can key to the express name and click button, it can auto-parsing at next parsing.</string>
+    <string name="kd_name">Express Name (Without ‘Express’ at last)</string>
+    <string name="kd_name_is_none">Add Error with None</string>
+    <string name="code">Pickup Codes</string>
+    <string name="code_name">Code</string>
+    <string name="sum">Sum</string>
+    <string name="jian">pieces</string>
+    <string name="yiqu">Collected</string>
+    <string name="daiqu">Uncollected</string>
+    <string name="format">Format of Pickup Code</string>
+    <string name="express">My Express</string>
+    <string name="yizhan">My Courier station</string>
+    <string name="rule_settings">Rule Settings</string>
+    <string name="title_activity_rule" translatable="false">RuleActivity</string>
+    <string name="cancel">Cancel</string>
+    <string name="delete">Delete\n</string>
+    <string name="edit">Edit\n</string>
+    <string name="port">Stations</string>
+    <string name="express_my">Express</string>
+    <string name="title_activity_code_add" translatable="false">CodeAddActivity</string>
+    <string name="title_activity_express_add" translatable="false">ExpressAddActivity</string>
+    <string name="more_settings">More Settings</string>
+    <string name="title_activity_more_settings" translatable="false">MoreSettingsActivity</string>
+    <string name="more_settings_isopening">"More Setting items is Opening up. "</string>
+    <string name="about_me">About Me</string>
+    <string name="privacy_policy">Privacy Policy</string>
+    <string name="user_agent">User Agreement</string>
+    <string name="title_activity_policy" translatable="false">PolicyActivity</string>
+    <string name="open_source" translatable="false">OpenSource License</string>
+    <string name="delete_code_again">Sure?</string>
+    <string name="yes">Yes</string>
+    <string name="no">No</string>
+    <string name="name">Express Name</string>
+    <string name="edit_code">"The technology is now updated,\nPlease waiting the next updated. "</string>
+    <string name="appwidget_text" translatable="false">EXAMPLE</string>
+    <string name="add_widget" translatable="false">Add widget</string>
+    <string name="app_widget_description" translatable="false">This is an app widget description</string>
+    <string name="qu">Take</string>
+    <string name="local">at</string>
+    <string name="title_activity_device_manager" translatable="false">DeviceManagerActivity</string>
+    <string name="device_manager">Device Manager</string>
+    <string name="connected_devices">Connected Devices</string>
+    <string name="connect">Connect</string>
+    <string name="text_connect">Connected</string>
+    <string name="text_disconnect">Unconneted</string>
+    <string name="all_devices">All Devices</string>
+    <string name="notices">Warning:  After connecting, we will send a pick-up code notification to your device.  Only one device can be connected at a time.</string>
+    <string name="title_activity_port_add" translatable="false">PortAddActivity</string>
+    <string name="unknown_local">Unknown Location</string>
+    <string name="select_kd">Express</string>
+    <string name="select_yz">PostStation</string>
+    <string name="demo_ts">You can search \"your mobile phone brand + how to set app background unlimited and self-start\"</string>
+    <string name="ts">To ensure the normal use of the service, you need to set the background of the application to unlimited and automatic startup</string>
+
+</resources>

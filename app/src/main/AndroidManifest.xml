@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <uses-feature
+        android:name="android.hardware.telephony"
+        android:required="false" />
+
+    <uses-permission android:name="android.permission.RECEIVE_SMS" /> <!-- 发送消息 -->
+    <uses-permission android:name="android.permission.READ_SMS" /> <!-- 写入消息 -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
+    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
+    <uses-permission android:name="android.permission.INTERNET" />
+
+    <application
+        android:allowBackup="true"
+        android:dataExtractionRules="@xml/data_extraction_rules"
+        android:fullBackupContent="@xml/backup_rules"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.LiteNote"
+        tools:targetApi="31">
+        <receiver
+            android:name=".desktopwidget.DesktopCodeMWidget"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/desktop_code_m_widget_info" />
+        </receiver>
+
+        <activity
+            android:name=".sub.PortAddActivity"
+            android:exported="false"
+            android:label="@string/title_activity_port_add"
+            android:theme="@style/Theme.LiteNote" />
+        <activity
+            android:name=".DeviceManagerActivity"
+            android:exported="false"
+            android:label="@string/title_activity_device_manager"
+            android:theme="@style/Theme.LiteNote" />
+        <activity
+            android:name=".PolicyActivity"
+            android:exported="false"
+            android:label="@string/title_activity_policy"
+            android:theme="@style/Theme.LiteNote" />
+        <activity
+            android:name=".MoreSettingsActivity"
+            android:exported="false"
+            android:label="@string/title_activity_more_settings"
+            android:theme="@style/Theme.LiteNote" />
+        <activity
+            android:name=".sub.ExpressAddActivity"
+            android:exported="false"
+            android:label="@string/title_activity_express_add"
+            android:theme="@style/Theme.LiteNote" />
+        <activity
+            android:name=".sub.CodeAddActivity"
+            android:exported="false"
+            android:label="@string/title_activity_code_add"
+            android:theme="@style/Theme.LiteNote" />
+        <activity
+            android:name=".RuleActivity"
+            android:exported="false"
+            android:label="@string/title_activity_rule"
+            android:theme="@style/Theme.LiteNote" />
+        <activity
+            android:name=".sub.AddCodeActivity"
+            android:exported="false"
+            android:label="@string/title_activity_add_code"
+            android:theme="@style/Theme.LiteNote" />
+        <activity
+            android:name=".InitActivity"
+            android:exported="true"
+            android:label="@string/app_name"
+            android:theme="@style/Theme.LiteNote">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <receiver
+            android:name=".reciever.MessageReciever"
+            android:enabled="true"
+            android:exported="true" />
+
+        <service
+            android:name=".service.MessageService"
+            android:enabled="true"
+            android:exported="true"
+            android:foregroundServiceType="specialUse"
+            android:label="@string/app_name">
+            <intent-filter>
+                <action android:name="org.anymobile.test.service.IMICHAT" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+
+            <property
+                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                android:value="用于监听短信提取取件码" />
+        </service>
+        <service
+            android:name=".service.FocusService"
+            android:enabled="true"
+            android:exported="true"
+            android:foregroundServiceType="specialUse"
+            android:label="取件码服务">
+            <property
+                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                android:value="用于显示取件码" />
+        </service>
+
+        <activity
+            android:name=".MainActivity"
+            android:exported="true"
+            android:label="@string/app_name"
+            android:theme="@style/Theme.LiteNote" />
+    </application>
+
+</manifest>
