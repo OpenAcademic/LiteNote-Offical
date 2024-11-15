@@ -5,6 +5,7 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
 import android.util.Log
+import android.widget.Toast
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -27,6 +28,7 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyHorizontalGrid
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
@@ -38,18 +40,30 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontStyle
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.zIndex
 import com.example.litenote.R
+import com.example.litenote.dbutils.CodeDBUtils
 import com.example.litenote.entity.CItem
+import com.example.litenote.entity.Code
+import com.example.litenote.utils.expercessToResource
 import com.example.litenote.utils.getDarkModeBackgroundColor
 
 import me.bytebeats.views.charts.bar.BarChart
@@ -117,7 +131,7 @@ fun HotTable(
         CItem("2022-02-04", 35)
     ),
     columns : Int = 5,
-    onclickDots : (timeStartStamp : Long, timeEndStamp : Long) -> Unit = { _, _ -> }
+    onclickDots : (str:String) -> Unit = { _ -> }
 ){
     // 生成最近100天的日期格式
     val dateList = mutableListOf<String>()
@@ -144,9 +158,7 @@ fun HotTable(
         day = calendar.get(Calendar.DAY_OF_MONTH)
 
     }
-    for (i in 0 until hots.size) {
-        Log.d("HotTable", "hots[$i] = ${hots[i]}")
-    }
+
 
     Row(
         verticalAlignment = Alignment.CenterVertically,
@@ -172,16 +184,8 @@ fun HotTable(
                         .width(20.dp)
                         .height(20.dp)
                         .clickable {
-                            val year = item.split("-")[0].toInt()
-                            val month = item.split("-")[1].toInt()
-                            val day = item.split("-")[2].toInt()
-                            val calendar = Calendar.getInstance()
-                            calendar.set(year, month - 1, day, 0, 0, 0)
-                            val timeStartStamp = calendar.timeInMillis
-                            calendar.set(year, month - 1, day, 23, 59, 59)
-                            val timeEndStamp = calendar.timeInMillis
-                            onclickDots(timeStartStamp, timeEndStamp)
-
+                            Log.d("sdsad", item)
+                            onclickDots(item)
                         },
                     tint = if (isExist) {
                         if (degree > 0 && degree < 3) {
@@ -248,9 +252,11 @@ fun MyDialog(
     }
 }
 
+@SuppressLint("RememberReturnType")
 @OptIn(ExperimentalLayoutApi::class, ExperimentalMaterial3Api::class)
 @Composable
 fun OverPage(
+    context: Context,
     backgroundColor : Color = Color.White,
     subBackgroundColor : Color = Color(0xFFFFFAF8),
     fontColor : Color = Color.Black,
@@ -259,12 +265,13 @@ fun OverPage(
         CItem("2022-02-04", 35)
     ),
     allNums : List<Int> = listOf(1, 2, 3),
-    onclickDots: (timeStartStamp: Long, timeEndStamp: Long) -> Unit = { _, _ -> },
     resources: android.content.res.Resources,
 
     ){
 
-
+    val lists = remember {
+        mutableStateListOf<Code>()
+    }
     Column(
         verticalArrangement = Arrangement.Top,
         horizontalAlignment = Alignment.Start,
@@ -334,7 +341,9 @@ fun OverPage(
         }
         Spacer(modifier = Modifier.width(20.dp))
 
-
+        val selet_date = remember {
+            mutableStateOf("")
+        }
         // LineChart
         Column(
             verticalArrangement = Arrangement.Center,
@@ -361,9 +370,23 @@ fun OverPage(
                         subBackgroundColor = subBackgroundColor,
                         fontColor = fontColor,
                         columns = 60,
-                        onclickDots = onclickDots
+                        onclickDots = {
+                            lists.clear()
+                            val open = CodeDBUtils.getCodesByDay(context = context, strDay = it)
+                            Log.d("dfsdf",open.toString())
+                            if (open.isNotEmpty()){
+                                selet_date.value= it
+                                lists.addAll(open)
+                            }else{
+                                selet_date.value= ""
+
+                                Toast.makeText(context,"当天数据为空",Toast.LENGTH_SHORT).show()
+                            }
+
+                        }
                     )
                 }
+
             }
             else{
                 Column(
@@ -387,8 +410,76 @@ fun OverPage(
                         fontSize = 20.sp)
                 }
             }
+
         }
         Spacer(modifier = Modifier.width(20.dp))
+        if (lists.isNotEmpty()){
+            Text(text = selet_date.value, color = fontColor,
+                fontSize = 24.sp,
+                modifier = Modifier.fillMaxWidth().padding(top = 10.dp, bottom = 10.dp),
+                fontWeight = FontWeight.Bold,
+                // 添加删除线
+                style = TextStyle(fontStyle = FontStyle.Normal,)
+            )
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .verticalScroll(
+                        rememberScrollState()
+                    )
+            ) {
+                lists.forEachIndexed { index, code ->
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = 5.dp)
+                            .background(
+                                getDarkModeBackgroundColor(context = context, level = 1),
+                                shape = MaterialTheme.shapes.medium
+                            )
+                            .padding(10.dp)
+                            .clip(RoundedCornerShape(15.dp)),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(0.5f),
+
+                            ) {
+                            Image(painter = painterResource(
+                                id = expercessToResource(code.kd)
+                            ),
+                                contentDescription = code.kd,
+                                modifier= Modifier
+                                    .size(25.dp)
+                                    .padding(
+                                        end = 6.dp
+                                    )
+                            )
+                            Text(text = code.code, color = fontColor,
+                                fontSize = 16.sp,
+                                // 添加删除线
+                                style = TextStyle(fontStyle = FontStyle.Normal,
+                                    textDecoration = if (code.status == 1) TextDecoration.LineThrough else TextDecoration.None
+                                )
+                            )
+                        }
+                        Text(text = code.yz, color = fontColor,
+                            fontSize = 16.sp,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                            // 添加删除线
+                            style = TextStyle(fontStyle = FontStyle.Normal,
+                                textDecoration = if (code.status == 1) TextDecoration.LineThrough else TextDecoration.None
+                            )
+                        )
+
+                    }
+                }
+
+            }
+        }
+
 
 
     }

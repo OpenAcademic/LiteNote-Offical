@@ -59,6 +59,9 @@ import com.example.litenote.service.MessageService
 import com.example.litenote.sub.AddCodeActivity
 import com.example.litenote.ui.theme.LiteNoteTheme
 import com.example.litenote.utils.DeviceUtils
+import com.example.litenote.utils.DownLoadFile
+import com.example.litenote.utils.NewPermissionUtils
+import com.example.litenote.utils.PermissionUtils
 import com.example.litenote.utils.getApplicationAgentStatus
 import com.example.litenote.utils.getApplicationStatus
 import com.example.litenote.utils.getDarkModeBackgroundColor
@@ -187,6 +190,20 @@ class MainActivity : ComponentActivity() {
                     val intent = Intent(
                         this@MainActivity,
                         DeviceManagerActivity::class.java
+                    )
+                    startActivity(intent)
+
+
+                }
+            )
+
+            settings.add(
+                SettingItems(
+                    R.string.check_update,0,0
+                ) {
+                    val intent = Intent(
+                        this@MainActivity,
+                        CheckUpdateActivity::class.java
                     )
                     startActivity(intent)
 
@@ -323,7 +340,7 @@ class MainActivity : ComponentActivity() {
                                 Column(
                                     modifier = Modifier
                                         .width(180.dp)
-                                        .padding(10.dp),
+                                        .padding(10.dp)  ,
                                     verticalArrangement = Arrangement.Center,
                                     horizontalAlignment = Alignment.End
                                 ) {
@@ -410,7 +427,11 @@ class MainActivity : ComponentActivity() {
                                         },
                                         modifier = Modifier
                                             .size(90.dp)
-                                            .padding(5.dp)
+                                            .padding(5.dp).border(
+                                                1.dp,
+                                                Color.Gray,
+                                                MaterialTheme.shapes.extraLarge
+                                            )
                                             .background(
                                                 getDarkModeBackgroundColor(
                                                     context = this@MainActivity,
@@ -460,9 +481,7 @@ class MainActivity : ComponentActivity() {
                                 if (isLongClick.value) 15.dp else 0.dp
                             )
                             .zIndex(if (isLongClick.value) 0f else 0f)
-                            .verticalScroll(
-                                rememberScrollState()
-                            ),
+                            ,
                     ) {
                         AnimatedVisibility(visible = isLongClick.value) {
                             MyDialog(context = this@MainActivity, drop = {
@@ -773,18 +792,31 @@ class MainActivity : ComponentActivity() {
                                     },
                                     onNextPage = { itemindex,nextpage->
                                         val objs = when (currStatus.value){
-                                            0 ->  CodeDBUtils.getsAllByPostsNoStatus(this@MainActivity,nextpage,
-                                                10,codes[itemindex].first)
-                                            1 ->  CodeDBUtils.getsAllByPosts(this@MainActivity,nextpage,
+                                            0 ->  {
+                                                CodeDBUtils.getsAllByPostsNoStatus(this@MainActivity,nextpage,
+                                                    10,codes[itemindex].first)
+
+                                            }
+                                            1 ->  {CodeDBUtils.getsAllByPosts(this@MainActivity,nextpage,
                                                 10,codes[itemindex].first,currStatus.value-1)
-                                            2 ->  CodeDBUtils.getsAllByPosts(this@MainActivity,nextpage,
-                                                10,codes[itemindex].first,currStatus.value-1)
-                                            else -> CodeDBUtils.getsAllByPostsNoStatus(this@MainActivity,nextpage,
-                                                10,codes[itemindex].first)
+                                            }
+                                            2 ->  {
+                                                CodeDBUtils.getsAllByPosts(this@MainActivity,nextpage,
+                                                    10,codes[itemindex].first,currStatus.value-1)
+
+
+                                            }
+                                            else -> {
+                                                CodeDBUtils.getsAllByPostsNoStatus(this@MainActivity,nextpage,
+                                                    10,codes[itemindex].first)
+                                            }
                                         }
+                                        Log.d("MainActivity",objs.toString())
+                                        codes[itemindex].lists.addAll(objs)
                                         if (objs.isEmpty()){
                                             false
                                         }else{
+
                                             true
                                         }
 
@@ -801,6 +833,7 @@ class MainActivity : ComponentActivity() {
                                 // do something
                                 if (overLookOBJ.value!=null) {
                                     OverPage(
+                                        context = this@MainActivity,
                                         backgroundColor = getDarkModeBackgroundColor(
                                             this@MainActivity, 0
                                         ),
@@ -814,9 +847,7 @@ class MainActivity : ComponentActivity() {
                                             overLookOBJ.value!!.dqj,
                                             overLookOBJ.value!!.yqj
                                         ),
-                                        onclickDots = {timeStart,timeEnd->
-                                            Log.d("MainActivity", "timeStart = $timeStart timeEnd = $timeEnd")
-                                        },
+
                                         resources = resources
                                     )
                                 } else {

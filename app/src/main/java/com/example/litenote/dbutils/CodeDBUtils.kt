@@ -55,6 +55,16 @@ data class DetailName(
     var yzNum : Int
 )
 object CodeDBUtils {
+    fun getCodesByDay(
+        context: Context,
+        strDay:String
+    ): List<Code> {
+        val db = CodeDatabase.getDatabase(context)
+        val codeDao = db.codeDao()
+        return codeDao.getAllByStrDay(
+            strDay = strDay
+        )
+    }
     fun getsAllByPostName(
         context: Context
     ):  MutableList<DetailName> {

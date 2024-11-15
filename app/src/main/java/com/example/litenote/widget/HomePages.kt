@@ -16,14 +16,18 @@ import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowForward
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
@@ -59,6 +63,10 @@ import com.example.litenote.R
 import com.example.litenote.dbutils.CodeDBUtils
 import com.example.litenote.entity.CItem
 import com.example.litenote.entity.Code
+import com.example.litenote.sub.CenterButton
+import com.example.litenote.sub.LeftButton
+import com.example.litenote.utils.ConfigUtils
+import com.example.litenote.utils.HomeStyle
 import com.example.litenote.utils.expercessToResource
 import com.example.litenote.utils.getDarkModeBackgroundColor
 import com.example.litenote.utils.getDarkModeTextColor
@@ -129,7 +137,7 @@ private fun getDayChange(timest: Long): String {
 private fun timeStempToTime(timest: Long): String {
     //val ptimest=1000L*timest
     // 转换为 2024-12-12 12:12
-    val sdf =  SimpleDateFormat("yyyy-MM-dd HH:mm");
+    val sdf =  SimpleDateFormat("yyyy-MM-dd");
     val dateStr = sdf.format(Date(timest).time);
     return dateStr;
 }
@@ -142,7 +150,7 @@ data class HomePortObj(
 )
 @SuppressLint("RememberReturnType")
 @Composable
-private fun Card(
+fun CodeCard(
     modifier: Modifier = Modifier,
     fontColor : Color = Color.Black,
     card : Code = Code(1, "08-98-1878","","",0,0,0,1718882771000, "","",""),
@@ -162,7 +170,6 @@ private fun Card(
                 Log.d("dragAmount", "dragAmount: $it")
                 onLongClicked(card)
             })
-
         }
     ) {
         Row(
@@ -191,93 +198,75 @@ private fun Card(
                     .fillMaxWidth()
 
             ) {
+                Column(
+                    modifier= Modifier.fillMaxWidth(0.79f)
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.Start,
 
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.Start,
+                        ){
+                        Image(painter = painterResource(
+                            id = expercessToResource(card.kd)),
+                            contentDescription = card.kd,
+                            modifier= Modifier
+                                .size(30.dp)
+                                .padding(
+                                    end = 6.dp
+                                )
+                        )
+                        Column {
+                            Row {
+                                var showText = if (card.kd.contains("快递")) {
+                                    card.kd
+                                }  else  if (card.kd.contains("驿站")) {
+                                    card.kd
+                                }
+                                else {
+                                    card.kd+"快递"
+                                }
+                                Text(text = showText+" ", color = fontColor,
+                                    fontSize = 16.sp,
+                                    // 添加删除线
+                                    style = TextStyle(fontStyle = FontStyle.Normal,
+                                        textDecoration = if (card.status == 1) TextDecoration.LineThrough else TextDecoration.None
+                                    )
+                                )
 
-                    ){
-                    Image(painter = painterResource(
-                        id = expercessToResource(card.kd)),
-                        contentDescription = card.kd,
-                        modifier= Modifier
-                            .size(25.dp)
-                            .padding(
-                                end = 6.dp
+                                Spacer(modifier = Modifier.width(10.dp))
+                                Text(text = card.code+" ",
+                                    color = fontColor, fontSize = 16.sp,
+                                    fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
+                                    style = TextStyle(fontStyle = FontStyle.Normal,
+                                        textDecoration = if (card.status == 1) TextDecoration.LineThrough else TextDecoration.None
+                                    )
+
+                                )
+                            }
+                            Text(text = "到站日期："+timeStempToTime(card.insertTime),
+                                color = fontColor, fontSize = 12.sp,
+                                modifier=Modifier,
+                                fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
+                                style = TextStyle(fontStyle = FontStyle.Normal,
+                                    textDecoration = if (card.status == 1) TextDecoration.LineThrough else TextDecoration.None
+                                )
                             )
-                    )
-                    var showText = if (card.kd.contains("快递")) {
-                        card.kd
-                    }  else  if (card.kd.contains("驿站")) {
-                        card.kd
-                    }
-                    else {
-                        card.kd+"快递"
-                    }
-                    Text(text = showText+" ", color = fontColor,
-                        fontSize = 16.sp,
-                        // 添加删除线
-                        style = TextStyle(fontStyle = FontStyle.Normal,
-                            textDecoration = if (card.status == 1) TextDecoration.LineThrough else TextDecoration.None
-                        )
-                    )
+                        }
 
-                    Spacer(modifier = Modifier.width(10.dp))
-                    Text(text = card.code+" ",
-                        color = fontColor, fontSize = 16.sp,
-                        fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
-                        style = TextStyle(fontStyle = FontStyle.Normal,
-                            textDecoration = if (card.status == 1) TextDecoration.LineThrough else TextDecoration.None
-                        )
-
-                    )
+                    }
                 }
 
 
 
-                if (checked.value) {
-                    Row{
-                        Text(text = "修改",
-                            color = fontColor, fontSize = 16.sp,
-                            fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
-                            style = TextStyle(fontStyle = FontStyle.Normal,
-                                textDecoration = if (card.status == 1) TextDecoration.LineThrough else TextDecoration.None
-                            ),
-                            modifier = Modifier
-                                .padding(3.dp)
-                                .background(
-                                    Color.Green,
-                                    shape = MaterialTheme.shapes.small
-                                )
-                                .clickable {
-                                    onEditCode(card)
-                                    checked.value = false
-                                }
-                                .padding(5.dp)
-                        )
-                        Text(text = "删除",
-                            color = fontColor, fontSize = 16.sp,
-                            fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
-                            style = TextStyle(fontStyle = FontStyle.Normal,
-                                textDecoration = if (card.status == 1) TextDecoration.LineThrough else TextDecoration.None
-                            ),
-                            modifier = Modifier
-                                .padding(3.dp)
-                                .background(
-                                    Color.Red,
-                                    shape = MaterialTheme.shapes.small
-                                )
-                                .clickable {
-                                    onDeleteDots(portindex, card.id, card.status)
-                                    checked.value = false
-                                }
-                                .padding(5.dp)
-                        )
-                    }
-                } else{
+
+                Row(
+                    modifier= Modifier.fillMaxWidth()
+                ) {
                     Spacer(modifier = Modifier.width(10.dp))
                     Text(text = getDayChange(card.insertTime),
                         color = fontColor, fontSize = 16.sp,
+                        textAlign = TextAlign.End,
+                        modifier = Modifier.fillMaxWidth(),
                         fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
                         style = TextStyle(fontStyle = FontStyle.Normal,
                             textDecoration = if (card.status == 1) TextDecoration.LineThrough else TextDecoration.None
@@ -306,13 +295,28 @@ fun HomePages(
     onLongClicked: (code: Code) -> Unit
 ) {
     var checked = remember { mutableStateOf(false) }
+    val homeStyle = remember {
+        mutableStateOf(ConfigUtils.checkHomeStyleConfig(context,"home_style"))
+    }
 
     Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(15.dp).background(
-                getDarkModeBackgroundColor(context = context, level = 0),
-            )
+        modifier = if (homeStyle.value == HomeStyle.LIST)
+            Modifier
+                .fillMaxSize()
+                .padding(15.dp)
+                .background(
+                    getDarkModeBackgroundColor(context = context, level = 0),
+                )
+                .verticalScroll(
+                    rememberScrollState()
+                )
+        else
+            Modifier
+                .fillMaxSize()
+                .padding(15.dp)
+                .background(
+                    getDarkModeBackgroundColor(context = context, level = 0),
+                )
             ,
         horizontalAlignment = Alignment.Start,
         verticalArrangement = Arrangement.Top
@@ -328,7 +332,8 @@ fun HomePages(
                 .background(
                     getDarkModeBackgroundColor(context = context, level = 1),
                     shape = RoundedCornerShape(25.dp)
-                ).padding(
+                )
+                .padding(
                     2.dp
                 )
         ) {
@@ -349,143 +354,184 @@ fun HomePages(
             onTagChange(it)
         }
         Spacer(modifier = Modifier.height(10.dp))
-        ports.forEachIndexed { portindex, item ->
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(5.dp),
-                horizontalAlignment = Alignment.Start,
-                verticalArrangement = Arrangement.Top
-            ) {
-                var currpage = remember {
-                    mutableStateOf(1)
-                }
-                var onOpen = remember {
-                    mutableStateOf(true)
-                }
-                Row(
+        if (homeStyle.value == HomeStyle.LIST){
+            ports.forEachIndexed { portindex, item ->
+                Column(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(5.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
+                    horizontalAlignment = Alignment.Start,
+                    verticalArrangement = Arrangement.Top
                 ) {
-                    Column {
-                        Text(
-                            text = if (item.first == "未知驿站"){
-                                resources.getString(R.string.unknown)
-                            } else{
-                                item.first
-                            },
-                            color = getDarkModeTextColor(context),
-                            fontSize = 20.sp,
-                            fontWeight = FontWeight.Bold
-                        )
-                        Text(
-                            text = if (item.yzLocal==null){
-                                resources.getString(R.string.unknown_local)
-                            } else{
-                                item.yzLocal.toString()
-                            },
-                            color = getDarkModeTextColor(context),
-                            fontSize = 12.sp,
-                            fontWeight = FontWeight.Bold
-                        )
-                        Text(
-                            text = resources.getString(R.string.kds)+":"+item.second.toString(),
-                            color = getDarkModeTextColor(context),
-                            fontSize = 12.sp,
-                            fontWeight = FontWeight.Normal
-                        )
+                    var currpage = remember {
+                        mutableStateOf(1)
                     }
-                    TextButton(onClick = {
-                        onOpen.value = !onOpen.value
-                    }) {
-                        Icon(
-                            imageVector = if (onOpen.value) {
-                                Icons.Default.KeyboardArrowUp
-                            } else {
-                                Icons.Default.KeyboardArrowDown
-                            },
-                            contentDescription = "open",
-                            tint = getDarkModeTextColor(context),
-                            modifier = Modifier.size(20.dp)
-                        )
+                    var onOpen = remember {
+                        mutableStateOf(true)
                     }
-                }
-                AnimatedVisibility(visible = onOpen.value) {
-                    Column(
-                        modifier = Modifier.background(
-                            getDarkModeBackgroundColor(context = context, level = 1),
-                            shape = MaterialTheme.shapes.large
-                        )
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(5.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-
-                        // fontColor : Color = Color.Black,
-                        //    card : Code = Code(1, "08-98-1878","","",0,0,0,1718882771000, "","",""),
-                        //    onClickDots: (yid:Int,id:Int,currStatus:Int) -> Unit = { _,_,_ -> },
-                        //    index:  Int = 0,
-                        //    portindex : Int = 0,
-                        //    onDeleteDots: (yid:Int,id:Int,currStatus:Int) -> Unit = { _,_,_ -> },
-                        //    onEditCode:  (code:Code) -> Unit = { _ -> },
-                        item.lists.forEachIndexed { itemlist, code ->
-                            Card(
-                                card = code,
-                                index = itemlist,
-                                portindex = portindex,
-                                onEditCode = {
-                                    onTagChange(1)
-                                    onReflesh()
+                        Column {
+                            Text(
+                                text = if (item.first == "未知驿站"){
+                                    resources.getString(R.string.unknown)
+                                } else{
+                                    item.first
                                 },
-                                onDeleteDots = { yid, id, currStatus ->
-                                    CodeDBUtils.delete(context,id.toLong())
-                                    onReflesh()
-                                }
-                                ,
-                                onClickDots = { yid, id, currStatus ->
-                                    Log.d("MainActivity",id.toString())
-                                    CodeDBUtils.complete(context,id.toLong())
-                                    onReflesh()
-
-                                }
-                                ,
-                                fontColor = getDarkModeTextColor(context = context),
-                                onLongClicked = {
-                                    onLongClicked(it)
-
-
-                                }
-
+                                color = getDarkModeTextColor(context),
+                                fontSize = 20.sp,
+                                fontWeight = FontWeight.Bold
                             )
+                            Text(
+                                text = if (item.yzLocal==null){
+                                    resources.getString(R.string.unknown_local)
+                                } else{
+                                    item.yzLocal.toString()
+                                },
+                                color = getDarkModeTextColor(context),
+                                modifier = Modifier.fillMaxWidth(0.8f),
 
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                            Text(
+                                text = resources.getString(R.string.kds)+":"+item.second.toString(),
+                                color = getDarkModeTextColor(context),
+                                fontSize = 12.sp,
+                                modifier = Modifier.fillMaxWidth(0.8f),
+
+                                fontWeight = FontWeight.Normal
+                            )
                         }
-                        if(item.second > item.lists.size) {
-                            TextButton(
-                                modifier = Modifier,
-                                onClick = {
-                                    currpage.value += 1
-                                    val isNext = onNextPage(portindex,currpage.value)
-                                    if (!isNext){
-                                        currpage.value -= 1
+                        TextButton(onClick = {
+                            onOpen.value = !onOpen.value
+                        }) {
+                            Icon(
+                                imageVector = if (onOpen.value) {
+                                    Icons.Default.KeyboardArrowUp
+                                } else {
+                                    Icons.Default.KeyboardArrowDown
+                                },
+                                contentDescription = "open",
+                                tint = getDarkModeTextColor(context),
+                                modifier = Modifier.size(20.dp)
+                            )
+                        }
+                    }
+                    AnimatedVisibility(visible = onOpen.value) {
+                        Column(
+                            modifier = Modifier.background(
+                                getDarkModeBackgroundColor(context = context, level = 1),
+                                shape = MaterialTheme.shapes.large
+                            )
+                        ) {
+
+                            // fontColor : Color = Color.Black,
+                            //    card : Code = Code(1, "08-98-1878","","",0,0,0,1718882771000, "","",""),
+                            //    onClickDots: (yid:Int,id:Int,currStatus:Int) -> Unit = { _,_,_ -> },
+                            //    index:  Int = 0,
+                            //    portindex : Int = 0,
+                            //    onDeleteDots: (yid:Int,id:Int,currStatus:Int) -> Unit = { _,_,_ -> },
+                            //    onEditCode:  (code:Code) -> Unit = { _ -> },
+                            item.lists.forEachIndexed { itemlist, code ->
+                                CodeCard(
+                                    card = code,
+                                    index = itemlist,
+                                    portindex = portindex,
+                                    onEditCode = {
+                                        onTagChange(1)
+                                        onReflesh()
+                                    },
+                                    onDeleteDots = { yid, id, currStatus ->
+                                        CodeDBUtils.delete(context,id.toLong())
+                                        onReflesh()
+                                    }
+                                    ,
+                                    onClickDots = { yid, id, currStatus ->
+                                        Log.d("MainActivity",id.toString())
+                                        CodeDBUtils.complete(context,id.toLong())
+                                        onReflesh()
+
+                                    }
+                                    ,
+                                    fontColor = getDarkModeTextColor(context = context),
+                                    onLongClicked = {
+                                        onLongClicked(it)
+
 
                                     }
 
-                                }) {
-                                Text(text = resources.getString(R.string.more),
-                                    color = getDarkModeTextColor(context),
-                                    fontSize = 12.sp,
-                                    modifier = Modifier
-                                        .fillMaxWidth(),
-                                    textAlign = TextAlign.Center,
-                                    fontWeight = FontWeight.Bold
                                 )
+
+                            }
+                            if(item.second > item.lists.size) {
+                                TextButton(
+                                    modifier = Modifier,
+                                    onClick = {
+                                        currpage.value += 1
+                                        val isNext = onNextPage(portindex,currpage.value)
+                                        Log.d("MainActivity",isNext.toString())
+
+                                        if (!isNext){
+                                            currpage.value -= 1
+
+                                        }
+
+                                    }) {
+                                    Text(text = resources.getString(R.string.more),
+                                        color = getDarkModeTextColor(context),
+                                        fontSize = 12.sp,
+                                        modifier = Modifier
+                                            .fillMaxWidth(),
+                                        textAlign = TextAlign.Center,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                }
                             }
                         }
                     }
+
+                    Spacer(modifier = Modifier.height(10.dp))
+                }
+            }
+        } else{
+            val portindex = remember {
+                mutableStateOf(0)
+            }
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .fillMaxHeight(),
+            ) {
+                RotationCard(context = context,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .fillMaxHeight(0.8f),
+                    item = ports[portindex.value], fontColor = getDarkModeTextColor(context),
+                    backgroundColor = getDarkModeBackgroundColor(context = context, level = 1),
+                    portindex = portindex.value,
+                    onNextPage = {pi,cp->
+                        onNextPage(pi,cp)
+                    },
+                    onReflesh = onReflesh,
+                    onLongClicked = onLongClicked,
+                    onTagChange = onTagChange,
+
+                    )
+                CenterButton(context = context, text = resources.getString(
+                    R.string.next_port
+                ),
+                    icon = Icons.Default.ArrowForward) {
+                    portindex.value = (portindex.value+1)%ports.size
                 }
 
-                Spacer(modifier = Modifier.height(10.dp))
             }
         }
+
     }
 }

@@ -3,15 +3,18 @@ package com.example.litenote.sub
 import android.annotation.SuppressLint
 import android.content.Context
 import android.os.Bundle
+import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.snapping.SnapPosition
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -25,6 +28,7 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.MailOutline
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -54,21 +58,77 @@ import com.example.litenote.entity.Code
 import com.example.litenote.entity.Express
 import com.example.litenote.entity.PostStation
 import com.example.litenote.sub.ui.theme.LiteNoteTheme
+import com.example.litenote.utils.ConfigUtils
 import com.example.litenote.utils.PickupCodeUtils
 import com.example.litenote.utils.getDarkModeBackgroundColor
 import com.example.litenote.utils.getDarkModeTextColor
 import com.example.litenote.utils.timeStempToTime
 import com.example.litenote.widget.ToolBar
 import com.example.litenote.widget.ToolBarTitle
+import com.google.gson.Gson
+import okhttp3.FormBody
+import okhttp3.MediaType
+import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import okhttp3.RequestBody.Companion.toRequestBody
+import org.json.JSONObject
+import java.util.concurrent.TimeUnit
+import kotlin.concurrent.thread
+
 @Composable
-fun LeftButton(
+fun CenterButton(
+    modifier: Modifier = Modifier,
     context: Context,
-    text : String,
+    text : String?,
     icon : ImageVector?,
     function : () -> Unit
 ){
     Row(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.Center
+    ) {
+        TextButton(onClick = {
+            function()
+        }){
+            Row(
+                modifier = Modifier
+                    .background(
+                        getDarkModeBackgroundColor(
+                            context = context,
+                            level = 1
+                        ),
+                        shape = RoundedCornerShape(25.dp)
+                    )
+                    .padding(10.dp),
+                verticalAlignment = androidx.compose.ui.Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.Center
+            ) {
+                if (icon != null){
+                    Icon(
+                        imageVector = icon,
+                        contentDescription = text,
+                        modifier = Modifier.size(30.dp)
+                    )
+                }
+                if (text != null){
+                    Text(text = text)
+                }
+
+            }
+        }
+    }
+}
+@Composable
+fun LeftButton(
+    modifier: Modifier = Modifier,
+    context: Context,
+    text : String?,
+    icon : ImageVector?,
+    function : () -> Unit
+){
+    Row(
+        modifier = modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.End
     ) {
         TextButton(onClick = {
@@ -94,11 +154,22 @@ fun LeftButton(
                         modifier = Modifier.size(30.dp)
                     )
                 }
-                Text(text = text)
+                if (text != null){
+                    Text(text = text)
+                }
+
             }
         }
     }
 }
+// {
+//            'code': 200,
+//            'msg': '成功',
+//            'data': json.loads(res)
+//        }
+data class ServerResponse(val code: Int, val msg: String , val data: ServerData?)
+data class ServerData(val code: List<String>, val kd: String, val yz: String,val local: String)
+
 class AddCodeActivity : ComponentActivity() {
     val msg = mutableStateOf("")
     val codes = mutableStateListOf<String>()
@@ -108,14 +179,180 @@ class AddCodeActivity : ComponentActivity() {
     val have_yz = mutableStateOf(false)
     val have_kd = mutableStateOf(false)
     val havetrue = mutableStateOf(false)
+    val llm_enable = mutableStateOf(false)
+    val is_loading = mutableStateOf(false)
     final var TAG = "com.example.litenote.sub.AddCodeActivity"
+    override fun onResume() {
+        super.onResume()
+        llm_enable.value = ConfigUtils.checkSwitchConfig(
+            this@AddCodeActivity, "llm_enable"
+        )
+    }
+    fun request(string: String){
+        //yz.value = data.yz.toString()
+        //                            company.value = data.kd.toString()
+        //                            have_kd.value = true
+        //                            have_yz.value = true
+        //                            havetrue.value = true
+        //                            yz_local.value = data.local.toString()
+        // 检查是否已经有 驿站和快递
 
+        if (yz.value.isNotEmpty()){
+            val yzz = PortDao.getByName(this@AddCodeActivity,yz.value)
+            if (yzz != null){
+                // 删除
+                PortDao.deleteById(this@AddCodeActivity,yzz.id)
+                have_yz.value = false
+            }
+        }
+        if (company.value.isNotEmpty()){
+            val kd = ExpressDao.getByName(this@AddCodeActivity,company.value)
+            if (kd != null){
+                // 删除
+                ExpressDao.deleteById(this@AddCodeActivity,kd.id)
+                have_kd.value = false
+            }
+
+        }
+        //构建url地址
+        var url = "https://note.wxd2zrx.top/llm/code"
+        //构建Json字符串
+        var jsonObject= JSONObject()
+        jsonObject.put("sms",string)
+        var jsonStr=jsonObject.toString()
+        is_loading.value = true
+        //调用请求
+        val requestBody = jsonStr.let {
+            //创建requestBody 以json的形式
+            val contentType: MediaType = "application/json".toMediaType()
+            jsonStr.toRequestBody(contentType)
+        } ?: run {
+            //如果参数为null直接返回null
+            FormBody.Builder().build()
+        }
+        thread {
+            val client = OkHttpClient.Builder().readTimeout(30, TimeUnit.SECONDS).build()
+            // 设置超时 30s
+
+            val request = Request.Builder()
+                .url(url)
+                .post(requestBody) //以post的形式添加requestBody
+
+                .build()
+
+            var response = client.newCall(request).execute()
+            val responseData = response.body?.string()
+            if (responseData != null) {
+                Log.d("LoginActivity", responseData)
+                val jsonObject = Gson().fromJson(responseData, ServerResponse::class.java)
+                val code = jsonObject.code
+                if (code == 200){
+                    try {
+                        val data = jsonObject.data
+                        if (data != null){
+                            yz.value = data.yz.toString()
+                            company.value = data.kd.toString()
+                            have_kd.value = true
+                            have_yz.value = true
+                            havetrue.value = true
+                            yz_local.value = data.local.toString()
+                            codes.addAll(data.code)
+                            ExpressDao.insert(
+                                this@AddCodeActivity,
+                                Express(
+                                    0,
+                                    company.value.replace("快递",""),
+                                )
+                            )
+                            PortDao.insert(
+                                this@AddCodeActivity,
+                                PostStation(
+                                    0,
+                                    yz.value,
+                                    yz_local.value,
+                                    System.currentTimeMillis(),
+                                )
+                            )
+                            runOnUiThread {
+                                Toast.makeText(
+                                    this@AddCodeActivity,
+                                    resources.getString(R.string.msg_is_pickup_code),Toast.LENGTH_SHORT
+                                ).show()
+                                is_loading.value = false
+                            }
+                        }
+                    }catch (e: Exception){
+                        Log.d("LoginActivity", e.message.toString())
+                        runOnUiThread {
+                            base_model(string)
+                            is_loading.value = false
+                        }
+                    }
+
+                }
+                Log.d("LoginActivity", "$code")
+
+            }
+        }
+
+
+
+    }
+    fun base_model(string: String){
+        var str = string
+        // 替换到
+        val code_check = PickupCodeUtils.getPickedCode(str,this@AddCodeActivity)
+        // 替换掉已经获取的取件码
+        for (c in code_check){
+            str = str.replace(c,"")
+        }
+        yz.value = PickupCodeUtils.getPickupYz(str,this@AddCodeActivity)
+        if (yz.value.isNotEmpty()){
+            str = str.replace(yz.value,"")
+        }
+        company.value = PickupCodeUtils.getPickupCompany(str,this@AddCodeActivity)
+
+
+        if ( code_check.isNotEmpty()){
+            Toast.makeText(
+                this@AddCodeActivity,
+                resources.getString(R.string.msg_is_pickup_code),Toast.LENGTH_SHORT
+            ).show()
+            havetrue.value = true
+            codes.clear()
+            val yzStr =  yz.value
+
+            if (yzStr.isNotEmpty()){
+                have_yz.value = true
+                val yzz = PortDao.getByName(this@AddCodeActivity,yzStr)
+                if (yzz != null){
+                    yz_local.value = yzz.address
+                }
+                yz.value = yzStr
+            }
+
+            val kdStr =  company.value
+            if (kdStr.isNotEmpty()){
+                have_kd.value = true
+                company.value = kdStr
+            }
+
+            for (code in code_check){
+                codes.add(code)
+            }
+
+        }else{
+            Toast.makeText(
+                this@AddCodeActivity,
+                resources.getString(R.string.msg_is_not_pickup_code),Toast.LENGTH_SHORT
+            ).show()
+        }
+    }
     @SuppressLint("StringFormatInvalid")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-
             LiteNoteTheme {
                 Scaffold(
                     topBar = {
@@ -163,64 +400,34 @@ class AddCodeActivity : ComponentActivity() {
                                 .padding(10.dp)
                                 .fillMaxWidth()
                                 .height(200.dp))
+                        Text(text = resources.getString(R.string.llm_based_infos),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(5.dp),
+                            color = getDarkModeTextColor(context = this@AddCodeActivity),
+                            fontSize = 12.sp,
+                            textAlign = TextAlign.Start
+                        )
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.End
                         ) {
-                            TextButton(onClick = {
+                            TextButton(
+                                enabled = !is_loading.value,
+                                onClick = {
                                 havetrue.value = false
                                 if (msg.value.isNotEmpty()) {
                                     // do something
                                     if (PickupCodeUtils.isPickupCode(msg.value)){
                                         // 替换掉 手机号
                                         var str = msg.value.replace(Regex("[0-9]{11}"),"")
-                                        // 替换到
-                                        val code_check = PickupCodeUtils.getPickedCode(str,this@AddCodeActivity)
-                                        // 替换掉已经获取的取件码
-                                        for (c in code_check){
-                                            str = str.replace(c,"")
-                                        }
-                                        yz.value = PickupCodeUtils.getPickupYz(str,this@AddCodeActivity)
-                                        if (yz.value.isNotEmpty()){
-                                            str = str.replace(yz.value,"")
-                                        }
-                                        company.value = PickupCodeUtils.getPickupCompany(str,this@AddCodeActivity)
-
-
-                                        if ( code_check.isNotEmpty()){
-                                            Toast.makeText(
-                                                this@AddCodeActivity,
-                                                resources.getString(R.string.msg_is_pickup_code),Toast.LENGTH_SHORT
-                                            ).show()
-                                            havetrue.value = true
-                                            codes.clear()
-                                            val yzStr =  yz.value
-
-                                            if (yzStr.isNotEmpty()){
-                                                have_yz.value = true
-                                                val yzz = PortDao.getByName(this@AddCodeActivity,yzStr)
-                                                if (yzz != null){
-                                                    yz_local.value = yzz.address
-                                                }
-                                                yz.value = yzStr
-                                            }
-
-                                            val kdStr =  company.value
-                                            if (kdStr.isNotEmpty()){
-                                                have_kd.value = true
-                                                company.value = kdStr
-                                            }
-
-                                            for (code in code_check){
-                                                codes.add(code)
-                                            }
-
+                                        if (llm_enable.value) {
+                                            request(str)
                                         }else{
-                                            Toast.makeText(
-                                                this@AddCodeActivity,
-                                                resources.getString(R.string.msg_is_not_pickup_code),Toast.LENGTH_SHORT
-                                            ).show()
+                                            base_model(str)
                                         }
+
+
                                     }
 
                                 }else{
@@ -245,11 +452,11 @@ class AddCodeActivity : ComponentActivity() {
                                     horizontalArrangement = Arrangement.Center
                                 ) {
                                     Icon(
-                                        imageVector = Icons.Default.Check,
-                                        contentDescription = "jiexi",
+                                        imageVector = if (is_loading.value) Icons.Default.Refresh else Icons.Default.Check,
+                                        contentDescription = "no",
                                         modifier = Modifier.size(30.dp)
                                     )
-                                    Text(text = resources.getString(R.string.jeixi))
+                                    Text(text = if (is_loading.value) resources.getString(R.string.loading) else resources.getString(R.string.jeixi))
                                 }
 
                             }
@@ -547,9 +754,13 @@ class AddCodeActivity : ComponentActivity() {
                                                 bottom = 15.dp
                                             )
                                             .background(
-                                                getDarkModeBackgroundColor(context = this@AddCodeActivity, level = 1),
+                                                getDarkModeBackgroundColor(
+                                                    context = this@AddCodeActivity,
+                                                    level = 1
+                                                ),
                                                 shape = RoundedCornerShape(25.dp)
-                                            ).padding(
+                                            )
+                                            .padding(
                                                 5.dp
                                             )
                                     ) {

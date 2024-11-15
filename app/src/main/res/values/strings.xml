@@ -92,5 +92,24 @@
     <string name="select_yz">PostStation</string>
     <string name="demo_ts">You can search \"your mobile phone brand + how to set app background unlimited and self-start\"</string>
     <string name="ts">To ensure the normal use of the service, you need to set the background of the application to unlimited and automatic startup</string>
+    <string name="look_codes">Look Codes</string>
+    <string name="home_style">Home Style</string>
+    <string name="list">List Style</string>
+    <string name="card">Card Style</string>
+    <string name="back_title">Back</string>
+    <string name="next_port">Next Post Staion</string>
+    <string name="llm_based">LLM Suppost</string>
+    <string name="download_model">Download</string>
+    <string name="downloading">Downloading</string>
+    <string name="model_size" translatable="false">Model size:</string>
+    <string name="wearn">After turning on the large model, the "Cloud large model" will be used when adding the access code, your data will not be stored in the cloud and the phone number in it will be filtered out.</string>
+    <string name="check_update">Check Update</string>
+    <string name="title_activity_check_update" translatable="false">CheckUpdateActivity</string>
+    <string name="download">Download Update</string>
+    <string name="current_version">Update is Checked!</string>
+    <string name="install">Install</string>
+    <string name="not_update">Not Update it, Delete it.</string>
+    <string name="loading">Loading</string>
+    <string name="llm_based_infos">When using LLM, you can parse it multiple times.</string>
 
 </resources>

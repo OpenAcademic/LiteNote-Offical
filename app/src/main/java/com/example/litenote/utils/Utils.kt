@@ -1,14 +1,21 @@
 package com.example.litenote.utils
 
 import android.annotation.SuppressLint
+import android.app.DownloadManager
 import android.content.Context
+import android.net.Uri
+import android.util.Log
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
+import androidx.core.app.ActivityCompat.requestPermissions
 import androidx.glance.GlanceTheme
 import androidx.glance.unit.ColorProvider
 import com.example.litenote.R
+import okhttp3.Callback
+import okhttp3.OkHttpClient
+import okhttp3.Request
 import java.text.SimpleDateFormat
 fun getApplicationStatus(
     context: Context

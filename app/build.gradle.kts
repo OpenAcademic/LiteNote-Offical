@@ -16,8 +16,8 @@ android {
         minSdk= 29
         maxSdk =35
         targetSdk =35
-        versionCode = 3000011
-        versionName = "2.1.1"
+        versionCode = 3000022
+        versionName = "2.2.2"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -116,7 +116,6 @@ dependencies {
 
     ))
 
-
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
@@ -135,6 +134,7 @@ dependencies {
     androidTestImplementation(libs.androidx.ui.test.junit4)
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
+    implementation("com.google.accompanist:accompanist-drawablepainter:0.36.0")
 
     implementation("androidx.glance:glance-appwidget:1.1.0")
     implementation("androidx.glance:glance-material:1.1.0")

@@ -4,7 +4,25 @@ import android.content.Context
 import android.content.pm.PackageManager
 import android.provider.Settings
 import androidx.core.content.ContextCompat
+import com.example.litenote.utils.PermissionUtils.checkPermission
 
+object NewPermissionUtils{
+    val permissions = listOf(
+        "android.permission.WRITE_EXTERNAL_STORAGE",
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.INTERNET"
+    )
+    fun checkPermissions(context: Context, permissions: Array<String>): Boolean {
+        for (permission in permissions) {
+            if (!checkPermission(context, permission)) {
+                return false
+            }
+        }
+        return true
+    }
+
+
+}
 object PermissionUtils {
     //     <uses-permission android:name="android.permission.RECEIVE_SMS" /> <!-- 发送消息 -->
     //    <uses-permission android:name="android.permission.SEND_SMS" /> <!-- 阅读消息 -->
@@ -21,14 +39,17 @@ object PermissionUtils {
         "短信读取权限",
         "通知发送权限",
         "后台服务权限",
-        "悬浮窗权限"
+        "悬浮窗权限",
+        "读写文件权限"
     )
     var permissions_descriptions = arrayOf(
         "用于读取短信以提取其中的取件码信息，便于存储于数据库之中。",
         "用于发送通知，以提示服务已经开启。",
         "用于后台服务，便于在后台也能够监听短信。",
-        "对于非HyperOS系统，用于显示悬浮窗，以便于在锁屏界面上显示取件码信息。"
-    )
+        "对于非HyperOS系统，用于显示悬浮窗，以便于在锁屏界面上显示取件码信息。",
+        "检查系统更新。",
+
+        )
     fun checkShowOnLockScreen(context: Context): Boolean {
         return Settings.canDrawOverlays(context)
     }

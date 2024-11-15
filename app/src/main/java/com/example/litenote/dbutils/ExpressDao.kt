@@ -10,7 +10,12 @@ object ExpressDao {
     fun insert(context: Context,item: Express) {
         val  db = CodeDatabase.getDatabase(context)
         val expressDao = db.expressDao()
-        expressDao.insert(item)
+        // 检查 驿站是否存在
+        val express = ExpressDao.getByName(context,item.name)
+        if (express == null) {
+            expressDao.insert(item)
+        }
+
     }
     fun getAll(context: Context): List<Express> {
         val  db = CodeDatabase.getDatabase(context)
@@ -48,7 +53,11 @@ object PortDao {
     fun insert(context: Context,item: PostStation) {
         val  db = CodeDatabase.getDatabase(context)
         val portsDao = db.portsDao()
-        portsDao.insertPost(item)
+        // 检查 驿站是否存在
+        val post = PortDao.getByName(context,item.name)
+        if (post == null) {
+            portsDao.insertPost(item)
+        }
     }
     fun getAll(context: Context): List<PostStation> {
         val  db = CodeDatabase.getDatabase(context)

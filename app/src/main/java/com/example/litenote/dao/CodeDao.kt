@@ -72,6 +72,10 @@ interface CodeDao {
     @Query("SELECT * FROM item WHERE status = :status AND isDelete = :isDelete")
     fun getAllByStatusAndIsDelete(status: Int, isDelete: Int): List<Code>
 
+
+    @Query("SELECT * FROM item WHERE strDay = :strDay")
+    fun getAllByStrDay(strDay: String): List<Code>
+
     @Update
     fun update(item: Code)
 

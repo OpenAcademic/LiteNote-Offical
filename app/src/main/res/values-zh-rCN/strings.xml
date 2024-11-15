@@ -81,4 +81,21 @@
     <string name="select_yz">驿站</string>
     <string name="demo_ts">你可以百度搜索“你的手机品牌+如何设置应用后台无限制和自启动”</string>
     <string name="ts">为了保证服务的正常使用，您需要设置应用后台无限制和自启动</string>
+    <string name="look_codes">查看取件码</string>
+    <string name="home_style">首页样式</string>
+    <string name="list">列表（高效）</string>
+    <string name="card">卡片（美观）</string>
+    <string name="back_title">返回</string>
+    <string name="next_port">下一个驿站</string>
+    <string name="llm_based">大语言模型支持</string>
+    <string name="wearn">开启大模型后将在添加取件码的时候使用“云端大模型”处理，您的数据将不会存储在云端且会过滤掉其中的电话号码。</string>
+    <string name="download_model">下载</string>
+    <string name="downloading">下载中</string>
+    <string name="check_update">检查更新</string>
+    <string name="download">下载更新</string>
+    <string name="current_version">检查到更新！</string>
+    <string name="install">安装</string>
+    <string name="not_update">不想更新了，删除它。</string>
+    <string name="loading">加载中</string>
+    <string name="llm_based_infos">使用LLM的时候你可以多次解析。</string>
 </resources>
