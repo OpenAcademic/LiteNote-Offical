@@ -9,6 +9,33 @@ import com.example.litenote.base.CodeDatabase
 import kotlin.concurrent.thread
 
 object PickupCodeUtils {
+    fun isYanzhengma(code: String): Boolean {
+        // 如果存在 验证码、验证码、验证码字样，说明是验证码
+        if (code.contains("验证码")) {
+            return true
+        }
+        return false
+    }
+    fun getYanzhengma(code:String):String{
+        // 验证码通常为4-6位数字、也有甚者是 六位大写字母
+        // 例如：验证码：123456、验证码：ABCDEF、验证码：1234
+        var reg1 = Regex("[0-9]{4,6}")
+        var reg2 = Regex("[A-Z]{6}")
+        var result = reg1.find(code)
+        if (result!=null) {
+            // 获取结果
+            return result.value
+
+        }
+        result = reg2.find(code)
+        if (result!=null) {
+            // 获取结果
+            return result.value
+        }
+        return ""
+
+
+    }
 
     fun isPickupCode(code: String): Boolean {
         // 如果存在 取件码、快递、驿站字样，说明是取件码
@@ -31,8 +58,10 @@ object PickupCodeUtils {
         // A-B，其中A是3位数字，B是4位数字
         //
 
-        val sharePref = context.getSharedPreferences("settings", Context.MODE_PRIVATE)
-        val  isDisableDefault = sharePref.getBoolean("mrqjm", false)
+        val  isDisableDefault = ConfigUtils.checkSwitchConfig(
+            context,
+            "disable_default"
+        )
 
         val allList = mutableListOf<String>()
         var result = Regex("[0-9]{2,3}-[0-9]{1,2}-[0-9]{4}").findAll(code)

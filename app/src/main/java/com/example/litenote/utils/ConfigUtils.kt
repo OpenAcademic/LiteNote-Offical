@@ -19,6 +19,25 @@ fun getHomeStyle(value: Int): HomeStyle {
         else -> LIST
     }
 }
+fun getHomeStyleByShow(show: String): HomeStyle {
+    return when (show) {
+        "ERNIE-Speed 8K" -> LIST
+        "ERNIE-Speed-Pro 128K" -> CARD
+        else -> LIST
+    }
+}
+
+enum class ModelList(val value: Int,  val show: String) {
+    ERNIESpeed8K(0, "ERNIE-Speed 8K"),
+    ERNIESpeedPro(1, "ERNIE-Speed-Pro 128K"),
+}
+fun getModelList(value: Int): ModelList {
+    return when (value) {
+        0 -> ModelList.ERNIESpeed8K
+        1 -> ModelList.ERNIESpeedPro
+        else -> ModelList.ERNIESpeed8K
+    }
+}
 
 object ConfigUtils {
     fun checkSwitchConfig(context: Context,name:String):Boolean{
@@ -32,7 +51,17 @@ object ConfigUtils {
         editor.putBoolean(name, value)
         editor.apply()
     }
-
+    fun getDarkModeType(context: Context):ModeType{
+        val sharePref = context.getSharedPreferences("settings", Context.MODE_PRIVATE)
+        val  isDisableDefault = sharePref.getInt("dark", 0)
+        return getModeType(isDisableDefault)
+    }
+    fun setDarkModeType(context: Context,value:ModeType){
+        val sharePref = context.getSharedPreferences("settings", Context.MODE_PRIVATE)
+        val editor = sharePref.edit()
+        editor.putInt("dark", value.value)
+        editor.apply()
+    }
     fun checkHomeStyleConfig(context: Context,name:String):HomeStyle{
         val sharePref = context.getSharedPreferences("settings", Context.MODE_PRIVATE)
         val  isDisableDefault = sharePref.getInt(name, 0)
@@ -42,6 +71,19 @@ object ConfigUtils {
         val sharePref = context.getSharedPreferences("settings", Context.MODE_PRIVATE)
         val editor = sharePref.edit()
         editor.putInt(name, value.value)
+        editor.apply()
+    }
+
+    fun checkModelListConfig(context: Context):ModelList{
+        val sharePref = context.getSharedPreferences("settings", Context.MODE_PRIVATE)
+        val  isDisableDefault = sharePref.getInt("model", 0)
+        return getModelList(isDisableDefault)
+    }
+
+    fun setModelListConfig(context: Context,value:ModelList){
+        val sharePref = context.getSharedPreferences("settings", Context.MODE_PRIVATE)
+        val editor = sharePref.edit()
+        editor.putInt("model", value.value)
         editor.apply()
     }
 

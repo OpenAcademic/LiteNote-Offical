@@ -83,14 +83,35 @@ fun expercessToResource(
         else -> R.mipmap.def
     }
 }
+enum class ModeType(val value: Int,var show:String) {
+    AUTO(0,"自动"),
+    LIGHT(1, "浅色模式"),
+    NIGHT(2 , "深色模式"),
+}
+fun getModeType(value: Int): ModeType {
+    return when (value) {
+        0 -> ModeType.AUTO
+        1 -> ModeType.LIGHT
+        2 -> ModeType.NIGHT
+        else -> ModeType.AUTO
+    }
+}
 
 
 fun isDarkMode(
     context: Context
 ): Boolean {
     val mode = context.resources.configuration.uiMode and android.content.res.Configuration.UI_MODE_NIGHT_MASK
-    return mode == android.content.res.Configuration.UI_MODE_NIGHT_YES
-
+    val modelType = ConfigUtils.getDarkModeType(context)
+    if (modelType == ModeType.AUTO){
+        return mode == android.content.res.Configuration.UI_MODE_NIGHT_YES
+    }else if (modelType == ModeType.LIGHT){
+        return false
+    } else if (modelType == ModeType.NIGHT){
+        return true
+    } else {
+        return mode == android.content.res.Configuration.UI_MODE_NIGHT_YES
+    }
 }
 
 fun getDarkModeTextColor(

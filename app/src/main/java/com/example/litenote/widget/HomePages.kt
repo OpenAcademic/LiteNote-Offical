@@ -199,7 +199,7 @@ fun CodeCard(
 
             ) {
                 Column(
-                    modifier= Modifier.fillMaxWidth(0.79f)
+                    modifier= Modifier.fillMaxWidth(0.7f)
                 ) {
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
@@ -508,27 +508,51 @@ fun HomePages(
                     .fillMaxWidth()
                     .fillMaxHeight(),
             ) {
-                RotationCard(context = context,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .fillMaxHeight(0.8f),
-                    item = ports[portindex.value], fontColor = getDarkModeTextColor(context),
-                    backgroundColor = getDarkModeBackgroundColor(context = context, level = 1),
-                    portindex = portindex.value,
-                    onNextPage = {pi,cp->
-                        onNextPage(pi,cp)
-                    },
-                    onReflesh = onReflesh,
-                    onLongClicked = onLongClicked,
-                    onTagChange = onTagChange,
+                if (ports.size==0){
+                    Column(
+                        verticalArrangement = Arrangement.Center,
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        modifier = Modifier.fillMaxWidth()
 
-                    )
-                CenterButton(context = context, text = resources.getString(
-                    R.string.next_port
-                ),
-                    icon = Icons.Default.ArrowForward) {
-                    portindex.value = (portindex.value+1)%ports.size
+                    ) {
+                        Image(painter = painterResource(R.mipmap.empty),
+                            contentDescription = "空",
+                            modifier = Modifier
+                                .size(100.dp)
+                                .padding(
+                                    10.dp
+                                )
+                        )
+                        Text(text = "暂无数据", color = getDarkModeTextColor(context),
+                            modifier = Modifier.padding(
+                                10.dp
+                            ),
+                            fontSize = 20.sp)
+                    }
+                }else{
+                    RotationCard(context = context,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .fillMaxHeight(0.8f),
+                        item = ports[portindex.value], fontColor = getDarkModeTextColor(context),
+                        backgroundColor = getDarkModeBackgroundColor(context = context, level = 1),
+                        portindex = portindex.value,
+                        onNextPage = {pi,cp->
+                            onNextPage(pi,cp)
+                        },
+                        onReflesh = onReflesh,
+                        onLongClicked = onLongClicked,
+                        onTagChange = onTagChange,
+
+                        )
+                    CenterButton(context = context, text = resources.getString(
+                        R.string.next_port
+                    ),
+                        icon = Icons.Default.ArrowForward) {
+                        portindex.value = (portindex.value+1)%ports.size
+                    }
                 }
+
 
             }
         }

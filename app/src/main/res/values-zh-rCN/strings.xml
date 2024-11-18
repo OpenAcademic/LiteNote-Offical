@@ -29,7 +29,7 @@
     <string name="no_more_data">没有更多的快递在该驿站。</string>
     <string name="msg_is_not_pickup_code">"短信没有收件代码。 "</string>
     <string name="system_error">系统错误</string>
-    <string name="msg_is_pickup_code">解析错误</string>
+    <string name="msg_is_pickup_code">解析成功</string>
     <string name="yz">这里是解析到的快递驿站</string>
     <string name="yz_name">快递站</string>
     <string name="yz_local_name">地址</string>
@@ -98,4 +98,5 @@
     <string name="not_update">不想更新了，删除它。</string>
     <string name="loading">加载中</string>
     <string name="llm_based_infos">使用LLM的时候你可以多次解析。</string>
+    <string name="llm_model">推理模型</string>
 </resources>

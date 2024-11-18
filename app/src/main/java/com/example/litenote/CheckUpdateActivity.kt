@@ -21,7 +21,9 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -32,12 +34,14 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.core.content.FileProvider
 import com.example.litenote.ui.theme.LiteNoteTheme
 import com.example.litenote.utils.ConfigUtils
 import com.example.litenote.utils.NewPermissionUtils
 import com.example.litenote.utils.PermissionUtils
 import com.example.litenote.utils.getDarkModeBackgroundColor
+import com.example.litenote.utils.getDarkModeTextColor
 import com.google.accompanist.drawablepainter.rememberDrawablePainter
 import com.google.gson.Gson
 import okhttp3.Call
@@ -343,13 +347,18 @@ class CheckUpdateActivity : ComponentActivity() {
 
                             )
                             if (service_info.value != null) {
-                                Text(text = resources.getString(R.string.current_version))
-                                Text(text =  service_info.value!!.code_str)
-                                Text(text = service_info.value!!.code.toString())
+                                Text(text = resources.getString(R.string.app_name),
+                                    color = getDarkModeTextColor(this@CheckUpdateActivity), fontSize = 30.sp)
+                                Text(text = resources.getString(R.string.current_version),
+                                    color = Color.Blue, fontSize = 20.sp)
+                                Text(text =  service_info.value!!.code_str + "(${currapp_version.value.toString()})")
 
                             } else {
-                                Text(text =  currapp_version.value.toString())
-                                Text(text =  currapp_version_str.value)
+                                Text(text = resources.getString(R.string.app_name),
+                                    color = getDarkModeTextColor(this@CheckUpdateActivity), fontSize = 30.sp)
+
+                                Text(text =  currapp_version_str.value + "(${currapp_version.value.toString()})",
+                                    color = getDarkModeTextColor(this@CheckUpdateActivity),)
 
                             }
                         }
@@ -364,12 +373,15 @@ class CheckUpdateActivity : ComponentActivity() {
                                             level = 1
                                         ),
                                         shape = RoundedCornerShape(15.dp)
+                                    ) .verticalScroll(
+                                        rememberScrollState()
                                     )
                                     .padding(15.dp),
                                 verticalArrangement = Arrangement.Top,
                                 horizontalAlignment = Alignment.Start
                             ) {
-                                Text(text = service_info.value!!.code_notices)
+                                Text(text = service_info.value!!.code_notices,
+                                    color = getDarkModeTextColor(this@CheckUpdateActivity),)
                             }
                         }
                         else if (curr_info.value != null){
@@ -384,11 +396,15 @@ class CheckUpdateActivity : ComponentActivity() {
                                             ),
                                             shape = RoundedCornerShape(15.dp)
                                         )
+                                        .verticalScroll(
+                                            rememberScrollState()
+                                        )
                                         .padding(15.dp),
                                     verticalArrangement = Arrangement.Top,
                                     horizontalAlignment = Alignment.Start
                                 ) {
-                                    Text(text = curr_info.value!!.code_notices)
+                                    Text(text = curr_info.value!!.code_notices,
+                                        color = getDarkModeTextColor(this@CheckUpdateActivity),)
                                 }
                             }
                         else{

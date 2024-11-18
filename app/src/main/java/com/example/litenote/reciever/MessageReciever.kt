@@ -14,6 +14,7 @@ import com.example.litenote.dbutils.LogDBUtils
 import com.example.litenote.entity.Code
 import com.example.litenote.entity.CodeConfig
 import com.example.litenote.service.FocusService
+import com.example.litenote.utils.ConfigUtils
 import com.example.litenote.utils.DeviceUtils
 import com.example.litenote.utils.PermissionUtils
 import com.example.litenote.utils.PickupCodeUtils
@@ -35,6 +36,7 @@ class MessageReciever : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
         var sBuilder = StringBuilder();
         val format = intent.getStringExtra("format");
+        var from = ""
         if(SMS_RECEIVER_ACTION.equals(intent.getAction()))
         {
             val bundle = intent.getExtras();
@@ -52,6 +54,7 @@ class MessageReciever : BroadcastReceiver() {
                         //sBuilder.append("来自：").append(msg.getDisplayOriginatingAddress()).append("\n")
                         //    .append("短信内容：")
                         sBuilder.append(msg.getDisplayMessageBody()).append("\n")
+                        from = msg.getDisplayOriginatingAddress()   // 获取短信发送方
 
                     };
                 }
@@ -60,7 +63,39 @@ class MessageReciever : BroadcastReceiver() {
 
         if (sBuilder.toString().isEmpty()) {
             return;
-        }else{
+        }
+        else{
+            if (ConfigUtils.checkSwitchConfig(context,"yanzhengma")){
+                if (PickupCodeUtils.isYanzhengma(sBuilder.toString())){
+                    var str = sBuilder.toString().replace(Regex("[0-9]{11}"),"")
+                    var code = PickupCodeUtils.getYanzhengma(str)
+                    var from = from
+
+                    if (code.isNotEmpty()){
+                        try {
+                            showQujianma(
+                                context,
+                                CodeConfig(
+                                    code,
+                                    "",
+                                    1,
+                                    from
+                                )
+                            )
+                            val device = DeviceUtils.getConnectedDevices(context)
+                            Log.d("MessageReciever", device)
+                            return
+                        }catch (e:Exception){
+                            LogDBUtils.insertLog(context,TAG,"Show Error", e.message.toString())
+                            return
+                        }
+                        return
+                    }else{
+                        return
+                    }
+                }
+
+            }
             if (PickupCodeUtils.isPickupCode(sBuilder.toString())){
                 // 替换掉 手机号
                 var str = sBuilder.toString().replace(Regex("[0-9]{11}"),"")
@@ -247,5 +282,7 @@ class MessageReciever : BroadcastReceiver() {
         }
 
     }
+
+
 
 }

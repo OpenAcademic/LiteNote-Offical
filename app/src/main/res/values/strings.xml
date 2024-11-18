@@ -111,5 +111,11 @@
     <string name="not_update">Not Update it, Delete it.</string>
     <string name="loading">Loading</string>
     <string name="llm_based_infos">When using LLM, you can parse it multiple times.</string>
+    <string name="llm_model">LLM Model</string>
+    <string name="DARK_MODE">深色模式</string>
+    <string name="disable_default">关闭默认规则</string>
+    <string name="empty">Empty</string>
+    <string name="yanzhengma">开启验证码识别</string>
+    <string name="yanzhengma_info">在类原生系统中，验证码不会被自动检测到。开启该功能，将自动为您识别短信中的验证码。您的验证码信息不会被上传。</string>
 
 </resources>

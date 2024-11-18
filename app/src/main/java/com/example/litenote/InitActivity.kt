@@ -89,6 +89,7 @@ class InitActivity : ComponentActivity() {
                     "android.permission.READ_SMS",
                     "android.permission.POST_NOTIFICATIONS",
                     "android.permission.FOREGROUND_SERVICE_SPECIAL_USE",
+
                 )
                 for (i in 0 until permissionsNow.size){
                     Log.d("MainActivity", "permissionsNow: ${permissionsNow[i]}")

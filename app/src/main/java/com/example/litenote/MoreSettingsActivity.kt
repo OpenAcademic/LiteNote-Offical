@@ -25,6 +25,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -38,10 +39,15 @@ import com.example.litenote.ui.theme.LiteNoteTheme
 import com.example.litenote.utils.ConfigUtils
 import com.example.litenote.utils.FileSizeUtil
 import com.example.litenote.utils.HomeStyle
+import com.example.litenote.utils.ModeType
+import com.example.litenote.utils.ModelList
 import com.example.litenote.utils.NewPermissionUtils
 import com.example.litenote.utils.PermissionUtils
 import com.example.litenote.utils.getDarkModeBackgroundColor
 import com.example.litenote.utils.getDarkModeTextColor
+import com.example.litenote.utils.getModeType
+import com.example.litenote.utils.getModelList
+import com.example.litenote.widget.SelectTypeView
 import com.example.litenote.widget.SubText
 import com.example.litenote.widget.ToolBarTitle
 import okhttp3.Call
@@ -62,12 +68,33 @@ class MoreSettingsActivity : ComponentActivity() {
     val lora_url = "https://hjjj.oss-cn-beijing.aliyuncs.com/adapter_model.safetensors"
     val file_device = mutableStateOf<java.io.File?>(null)
     val lora_file_devices = mutableStateOf<java.io.File?>(null)
+    val model_list = mutableStateListOf(
+        ModelList.ERNIESpeed8K.show,
+        ModelList.ERNIESpeedPro.show
+    )
+    val dark_model_list = mutableStateListOf(
+        ModeType.AUTO.show,
+        ModeType.LIGHT.show,
+        ModeType.NIGHT.show
+    )
+    val disable_default = mutableStateOf(false)
+    val yanzhengma = mutableStateOf(false)
     override fun onResume() {
         super.onResume()
         llm_enable.value = ConfigUtils.checkSwitchConfig(
             this@MoreSettingsActivity, "llm_enable"
         )
         // check_file()
+        model.value = ConfigUtils.checkModelListConfig(this@MoreSettingsActivity)
+        select_index.value = model_list.indexOf(model.value.show)
+        disable_default.value = ConfigUtils.checkSwitchConfig(
+            this@MoreSettingsActivity,
+            "disable_default"
+        )
+        yanzhengma.value = ConfigUtils.checkSwitchConfig(
+            this@MoreSettingsActivity,
+            "yanzhengma"
+        )
     }
     val  is_downloading = mutableStateOf(false)
     val file_isExist = mutableStateOf(false)
@@ -75,6 +102,11 @@ class MoreSettingsActivity : ComponentActivity() {
 
     val max_size = mutableStateOf(0L)
     val curr_size = mutableStateOf(0)
+
+    var model = mutableStateOf(ModelList.ERNIESpeed8K)
+    var darkmodel = mutableStateOf(ModeType.AUTO)
+
+    var select_index = mutableStateOf(0)
     fun check_file(){
         val filesDirPath = Objects.requireNonNull(this@MoreSettingsActivity.getExternalFilesDir("model"))?.path
         // 检查 filesDirPath + "/" + "gemma-1.1-2b-it-cpu-int4.bin" 是否存在
@@ -309,11 +341,78 @@ class MoreSettingsActivity : ComponentActivity() {
                             }
                             Text(text = resources.getString(R.string.wearn), fontSize = 12.sp, modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Start)
 
+                            if (llm_enable.value){
+
+                                SelectTypeView(typeList = model_list,
+                                    fontcolor = getDarkModeTextColor(this@MoreSettingsActivity),
+                                    select_key = model.value.show,
+                                    backgroundcolor = getDarkModeBackgroundColor(this@MoreSettingsActivity, 1),
+                                    title =  resources.getString(R.string.llm_model)) {
+                                    ConfigUtils.setModelListConfig(this@MoreSettingsActivity,
+                                        getModelList(model_list.indexOf(it)))
+                                    model.value = getModelList(model_list.indexOf(it))
+
+                                }
+                            }
+                            var hidden = true
+                            if (!hidden){
+                                SelectTypeView(typeList = dark_model_list,
+                                    fontcolor = getDarkModeTextColor(this@MoreSettingsActivity),
+                                    select_key = darkmodel.value.show,
+                                    backgroundcolor = getDarkModeBackgroundColor(this@MoreSettingsActivity, 1),
+                                    title =  resources.getString(R.string.DARK_MODE)) {
+                                    ConfigUtils.setDarkModeType(this@MoreSettingsActivity,
+                                        getModeType(dark_model_list.indexOf(it))
+                                    )
+                                    darkmodel.value = getModeType(model_list.indexOf(it))
+
+                                }
+                            }
+
+
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                Text(text = resources.getString(R.string.disable_default),
+                                    fontSize = 25.sp,
+                                    color = getDarkModeTextColor(this@MoreSettingsActivity))
+
+                                Switch(checked = disable_default.value, onCheckedChange = {
+                                    ConfigUtils.setSwitchConfig(this@MoreSettingsActivity,
+                                        "disable_default",it)
+                                    disable_default.value = it
+                                })
+
+                            }
+
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                Text(text = resources.getString(R.string.yanzhengma),
+                                    fontSize = 25.sp,
+                                    color = getDarkModeTextColor(this@MoreSettingsActivity))
+
+                                Switch(checked = yanzhengma.value, onCheckedChange = {
+                                    ConfigUtils.setSwitchConfig(this@MoreSettingsActivity,
+                                        "yanzhengma",it)
+                                    yanzhengma.value = it
+                                })
+
+                            }
+                            Text(text = resources.getString(R.string.yanzhengma_info), fontSize = 12.sp, modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Start)
+
+
 
 
 
 
                         }
+
+
 
                     }
                 }

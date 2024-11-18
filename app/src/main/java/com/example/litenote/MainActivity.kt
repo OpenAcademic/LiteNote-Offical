@@ -479,6 +479,11 @@ class MainActivity : ComponentActivity() {
                             .padding(innerPadding)
                             .blur(
                                 if (isLongClick.value) 15.dp else 0.dp
+                            ).background(
+                                getDarkModeBackgroundColor(
+                                    context = this@MainActivity,
+                                    level = 0
+                                )
                             )
                             .zIndex(if (isLongClick.value) 0f else 0f)
                             ,
@@ -657,8 +662,10 @@ class MainActivity : ComponentActivity() {
                                                     SelectTypeView(
                                                         typeList = kds,
                                                         icon_on = true,
+                                                        backgroundcolor = getDarkModeBackgroundColor(context = this@MainActivity, level = 1),
                                                         select_key = kd.value,
                                                         title = resources.getString(R.string.select_kd),
+                                                        fontcolor = getDarkModeTextColor(context = this@MainActivity)
                                                     ) {
                                                         kd.value = it
 
@@ -666,9 +673,10 @@ class MainActivity : ComponentActivity() {
                                                     SelectTypeView(
                                                         typeList = ports,
                                                         icon_on = false,
-
+                                                        backgroundcolor = getDarkModeBackgroundColor(context = this@MainActivity, level = 1),
                                                         select_key = yz.value,
                                                         title = resources.getString(R.string.select_yz),
+                                                        fontcolor = getDarkModeTextColor(context = this@MainActivity)
                                                     ) {
                                                         yz.value = it
 

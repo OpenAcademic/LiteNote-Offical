@@ -218,7 +218,9 @@ class AddCodeActivity : ComponentActivity() {
         var url = "https://note.wxd2zrx.top/llm/code"
         //构建Json字符串
         var jsonObject= JSONObject()
+        var model = ConfigUtils.checkModelListConfig(this)
         jsonObject.put("sms",string)
+        jsonObject.put("model",model.value)
         var jsonStr=jsonObject.toString()
         is_loading.value = true
         //调用请求

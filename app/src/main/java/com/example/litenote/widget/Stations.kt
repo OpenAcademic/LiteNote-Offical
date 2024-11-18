@@ -70,6 +70,7 @@ import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
@@ -131,17 +132,26 @@ fun StationCard(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Column {
+            Column(
+                modifier = Modifier.fillMaxWidth(0.8f)
+            ) {
                 Text(
                     text = format.name, color = fontColor,
                     fontSize = 20.sp,
-                )
+                    modifier = Modifier.fillMaxWidth(),
+                    overflow = TextOverflow.Ellipsis,
+                    maxLines = 1
+                    )
                 Text(
                     text = format.address, color = fontColor,
                     fontSize = 14.sp,
+                    modifier = Modifier.fillMaxWidth(),
+                    overflow = TextOverflow.Ellipsis,
+                    maxLines = 1
                 )
             }
             IconButton(
+                modifier = Modifier.fillMaxWidth(),
                 onClick = {
                     isMore.value = !isMore.value
                 }
