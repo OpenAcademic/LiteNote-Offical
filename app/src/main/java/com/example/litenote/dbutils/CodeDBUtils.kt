@@ -65,6 +65,14 @@ object CodeDBUtils {
             strDay = strDay
         )
     }
+
+    fun getNum(
+        context: Context,
+    ): Int {
+        val db = CodeDatabase.getDatabase(context)
+        val codeDao = db.codeDao()
+        return codeDao.countByStatus(0)
+    }
     fun getsAllByPostName(
         context: Context
     ):  MutableList<DetailName> {
@@ -241,6 +249,25 @@ object CodeDBUtils {
             ))
         }
         return res
+    }
+    fun getsAllByPostsNameAndStatus(
+        context: Context,
+        yzName: String,
+        page: Int,
+    ): MutableList<Code> {
+        // val logDao = AppDatabase.getInstance(context).logDao()
+        // return logDao.getAll(page, pageSize)
+        val  db = CodeDatabase.getDatabase(context)
+        val codeDao = db.codeDao()
+        val postDao = db.portsDao()
+
+            val q = mutableStateListOf<Code>()
+            q.addAll(
+                CodeDBUtils.getsAllByPosts(context,page,
+                    10,yzName,0)
+            )
+
+        return q
     }
     fun getsAllByPostsNoStatus(context: Context,
                        page: Int,

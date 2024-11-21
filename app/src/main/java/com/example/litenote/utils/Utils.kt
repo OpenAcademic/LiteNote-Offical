@@ -113,7 +113,30 @@ fun isDarkMode(
         return mode == android.content.res.Configuration.UI_MODE_NIGHT_YES
     }
 }
-
+fun isDarkMode2(
+    context: Context
+): Boolean {
+    val mode = context.resources.configuration.uiMode and android.content.res.Configuration.UI_MODE_NIGHT_MASK
+    val modelType = ConfigUtils.getDarkModeType(context)
+    if (modelType == ModeType.AUTO){
+        return mode == android.content.res.Configuration.UI_MODE_NIGHT_YES
+    }else if (modelType == ModeType.LIGHT){
+        return false
+    } else if (modelType == ModeType.NIGHT){
+        return true
+    } else {
+        return mode == android.content.res.Configuration.UI_MODE_NIGHT_YES
+    }
+}
+fun getDarkModeTextColor2(
+    context: Context
+): Color {
+    return if (isDarkMode2(context)) {
+        Color.White
+    } else {
+        Color.Black
+    }
+}
 fun getDarkModeTextColor(
     context: Context
 ): Color {
@@ -169,12 +192,42 @@ fun getDarkModeBackgroundColor(
     }
 }
 
+
+
 @Composable
 fun getWidgetDarkModeBackgroundColor(
     context: Context,
     level : Int
 ): ColorProvider {
     return if (isDarkMode(context)) {
+        if (level == 0) {
+            GlanceTheme.colors.surface
+        } else if (level == 1) {
+            GlanceTheme.colors.secondary
+        } else if (level == 2) {
+            ColorProvider(Color.Gray)
+        } else {
+            ColorProvider(Color.Black)
+        }
+    } else {
+        if (level == 0) {
+            GlanceTheme.colors.onSurface
+        } else if (level == 1) {
+            GlanceTheme.colors.onSecondaryContainer
+        } else if (level == 2) {
+            ColorProvider(Color(0xFFFFF8E3))
+        } else {
+            ColorProvider(Color.White)
+        }
+    }
+}
+
+@Composable
+fun getWidgetDarkModeBackgroundColor2(
+    context: Context,
+    level : Int
+): ColorProvider {
+    return if (isDarkMode2(context)) {
         if (level == 0) {
             GlanceTheme.colors.surface
         } else if (level == 1) {
@@ -186,9 +239,9 @@ fun getWidgetDarkModeBackgroundColor(
         }
     } else {
         if (level == 0) {
-            GlanceTheme.colors.onSurface
+            GlanceTheme.colors.surface
         } else if (level == 1) {
-            GlanceTheme.colors.onSecondaryContainer
+            GlanceTheme.colors.secondaryContainer
         } else if (level == 2) {
             ColorProvider(Color(0xFFFFF8E3))
         } else {

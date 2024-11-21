@@ -20,7 +20,7 @@
             android:layout_height="wrap_content"
             android:text="您收到快递"
             android:textSize="15dp"
-            android:textColor="#ffffff"
+            android:textColor="@color/black"
             />
         <TextView
             android:id="@+id/contentqjmText"
@@ -28,7 +28,7 @@
             android:layout_height="wrap_content"
             android:text="21-34-1023"
             android:textSize="30dp"
-            android:textColor="#ffffff"
+            android:textColor="@color/black"
             />
         <TextView
             android:id="@+id/contentqjmKuaidi"
@@ -36,7 +36,7 @@
             android:layout_height="wrap_content"
             android:text="京东快递"
             android:textSize="15dp"
-            android:textColor="#ffffff"
+            android:textColor="@color/black"
             />
 
     </LinearLayout>

@@ -1,0 +1,57 @@
+
+<LinearLayout
+
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    style="@style/Widget.LiteNote.AppWidget.Container"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="horizontal"
+    android:theme="@style/Theme.LiteNote.AppWidgetContainer"
+    android:background="@drawable/island"
+    android:padding="@dimen/widget_root_padding"
+    android:id="@+id/back">
+
+    <LinearLayout
+        android:id="@+id/widget_content"
+        android:layout_width="match_parent"
+        android:orientation="vertical"
+        android:layout_gravity="center"
+        android:gravity="center"
+        android:background="@drawable/subisland"
+        android:layout_height="match_parent">
+        <TextView
+            android:id="@+id/sum"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textSize="60px"
+            android:textFontWeight="800"
+            android:maxLines="1"
+            android:text="您目前有"
+            android:textAlignment="textStart"
+            android:textColor="@color/black"
+            />
+        <TextView
+            android:id="@+id/sum_num"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textSize="100px"
+            android:textFontWeight="800"
+            android:maxLines="1"
+            android:text="30"
+            android:textAlignment="textStart"
+            android:textColor="@color/black"
+            />
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textSize="60px"
+            android:textFontWeight="800"
+            android:maxLines="1"
+            android:text="个快件待取"
+            android:textAlignment="textStart"
+            android:textColor="@color/black"
+            />
+
+    </LinearLayout>
+
+</LinearLayout>
