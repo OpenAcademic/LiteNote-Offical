@@ -26,10 +26,13 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
@@ -63,10 +66,24 @@ import java.util.Calendar
 import kotlin.concurrent.thread
 
 class AddTrainTicketActivity : ComponentActivity() {
+    private val showDeleteDialog = mutableStateOf(false)
+    
     @OptIn(ExperimentalMaterial3Api::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         
+        // 获取传入的车票信息
+        val editMode = intent.getBooleanExtra("editMode", false)
+        val ticketId = intent.getIntExtra("ticketId", -1)
+        val departure = intent.getStringExtra("departure") ?: ""
+        val arrival = intent.getStringExtra("arrival") ?: ""
+        val trainNumber = intent.getStringExtra("trainNumber") ?: ""
+        val trainType = intent.getStringExtra("trainType") ?: ""
+        val passenger = intent.getStringExtra("passenger") ?: ""
+        val departureTime = intent.getLongExtra("departureTime", System.currentTimeMillis())
+        val arrivalTime = intent.getLongExtra("arrivalTime", System.currentTimeMillis())
+        val ticketColor = intent.getSerializableExtra("ticketColor") as? TicketColor ?: TicketColor.BLUE
+
         setContent {
             LiteNoteTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
@@ -78,13 +95,13 @@ class AddTrainTicketActivity : ComponentActivity() {
                             .padding(20.dp)
                             .verticalScroll(rememberScrollState())
                     ) {
-                        val departure = remember { mutableStateOf("") }
-                        val departureTime = remember { mutableStateOf(System.currentTimeMillis()) }
-                        val arrival = remember { mutableStateOf("") }
-                        val arrivalTime = remember { mutableStateOf(System.currentTimeMillis()) }
-                        val trainNumber = remember { mutableStateOf("") }
-                        val trainType = remember { mutableStateOf("") }
-                        val passenger = remember { mutableStateOf("") }
+                        val departure = remember { mutableStateOf(if (editMode) departure else "") }
+                        val departureTime = remember { mutableStateOf(if (editMode) departureTime else System.currentTimeMillis()) }
+                        val arrival = remember { mutableStateOf(if (editMode) arrival else "") }
+                        val arrivalTime = remember { mutableStateOf(if (editMode) arrivalTime else System.currentTimeMillis()) }
+                        val trainNumber = remember { mutableStateOf(if (editMode) trainNumber else "") }
+                        val trainType = remember { mutableStateOf(if (editMode) trainType else "") }
+                        val passenger = remember { mutableStateOf(if (editMode) passenger else "") }
                         val travelDate = remember { mutableStateOf(System.currentTimeMillis()) }
                         val ticketColor = remember { mutableStateOf(TicketColor.BLUE) }
                         val note = remember { mutableStateOf("") }
@@ -405,35 +422,119 @@ class AddTrainTicketActivity : ComponentActivity() {
                                 }
                                 
                                 thread {
-                                    val ticket = TrainTicket(
-                                        trainNumber = trainNumber.value,
-                                        departure = departure.value,
-                                        departureTime = departureTime.value,
-                                        arrival = arrival.value,
-                                        arrivalTime = arrivalTime.value,
-                                        passenger = passenger.value,
-                                        travelDate = travelDate.value,
-                                        ticketColor = ticketColor.value,
-                                        trainType = trainType.value.takeIf { it.isNotEmpty() },
-                                        note = note.value.takeIf { it.isNotEmpty() }
-                                    )
-                                    
-                                    CodeDatabase.getDatabase(this@AddTrainTicketActivity)
-                                        .trainTicketDao()
-                                        .insert(ticket)
-                                        
-                                    runOnUiThread {
-                                        Toast.makeText(
-                                            this@AddTrainTicketActivity,
-                                            "添加成功",
-                                            Toast.LENGTH_SHORT
-                                        ).show()
-                                        finish()
+                                    if (editMode) {
+                                        val ticket = TrainTicket(
+                                            id = ticketId,
+                                            trainNumber = trainNumber.value,
+                                            departure = departure.value,
+                                            departureTime = departureTime.value,
+                                            arrival = arrival.value,
+                                            arrivalTime = arrivalTime.value,
+                                            passenger = passenger.value,
+                                            travelDate = travelDate.value,
+                                            ticketColor = ticketColor.value,
+                                            trainType = trainType.value.takeIf { it.isNotEmpty() },
+                                            note = note.value.takeIf { it.isNotEmpty() }
+                                        )
+
+                                        CodeDatabase.getDatabase(this@AddTrainTicketActivity)
+                                            .trainTicketDao()
+                                            .update(ticket)
+
+                                        runOnUiThread {
+                                            Toast.makeText(
+                                                this@AddTrainTicketActivity,
+                                                "修改成功",
+                                                Toast.LENGTH_SHORT
+                                            ).show()
+                                            finish()
+                                        }
+                                        return@thread
+                                    } else{
+                                        val ticket = TrainTicket(
+                                            trainNumber = trainNumber.value,
+                                            departure = departure.value,
+                                            departureTime = departureTime.value,
+                                            arrival = arrival.value,
+                                            arrivalTime = arrivalTime.value,
+                                            passenger = passenger.value,
+                                            travelDate = travelDate.value,
+                                            ticketColor = ticketColor.value,
+                                            trainType = trainType.value.takeIf { it.isNotEmpty() },
+                                            note = note.value.takeIf { it.isNotEmpty() }
+                                        )
+
+                                        CodeDatabase.getDatabase(this@AddTrainTicketActivity)
+                                            .trainTicketDao()
+                                            .insert(ticket)
+
+                                        runOnUiThread {
+                                            Toast.makeText(
+                                                this@AddTrainTicketActivity,
+                                                "添加成功",
+                                                Toast.LENGTH_SHORT
+                                            ).show()
+                                            finish()
+                                        }
                                     }
+
                                 }
                             }
                         ) {
                             Text("保存")
+                        }
+
+                        // 在保存按钮下方添加删除按钮
+                        if (editMode) {
+                            Spacer(modifier = Modifier.height(6.dp))
+                            Button(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = 16.dp),
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = MaterialTheme.colorScheme.error
+                                ),
+                                onClick = { showDeleteDialog.value = true }
+                            ) {
+                                Text("删除车票")
+                            }
+                        }
+
+                        // 添加删除确认对话框
+                        if (showDeleteDialog.value) {
+                            AlertDialog(
+                                onDismissRequest = { showDeleteDialog.value = false },
+                                title = { Text("确认删除") },
+                                text = { Text("确定要删除该车票吗？删除后将无法恢复。") },
+                                confirmButton = {
+                                    TextButton(
+                                        onClick = {
+                                            showDeleteDialog.value = false
+                                            thread {
+                                                val db = CodeDatabase.getDatabase(this@AddTrainTicketActivity)
+                                                db.trainTicketDao().deleteById(ticketId)
+                                                runOnUiThread {
+                                                    Toast.makeText(
+                                                        this@AddTrainTicketActivity,
+                                                        "删除成功",
+                                                        Toast.LENGTH_SHORT
+                                                    ).show()
+                                                    finish()
+                                                }
+                                            }
+                                        }
+                                    ) {
+                                        Text("确定")
+                                    }
+                                },
+                                dismissButton = {
+                                    TextButton(
+                                        onClick = { showDeleteDialog.value = false }
+                                    ) {
+                                        Text("取消")
+                                    }
+                                }
+                            )
                         }
                     }
                 }

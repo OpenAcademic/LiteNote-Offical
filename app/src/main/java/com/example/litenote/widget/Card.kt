@@ -1,4 +1,3 @@
-
 /*
  * Copyright (C) 2024 The LiteNote Project
  * @author OpenAcademic
@@ -34,9 +33,11 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowForward
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Divider
 import androidx.compose.material3.FloatingActionButton
@@ -63,6 +64,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.litenote.AddMaintenanceActivity
+import com.example.litenote.AddProductActivity
 import com.example.litenote.R
 import com.example.litenote.dbutils.CodeDBUtils
 import com.example.litenote.entity.Code
@@ -79,8 +81,10 @@ import com.example.litenote.utils.daysToYearDays
 @Composable
 fun TrainTicketCard(
     ticket: TrainTicket,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onEditTicket: () -> Unit = {}
 ) {
+    var expanded = remember { mutableStateOf(false) }
     val backgroundColor = if (ticket.ticketColor == TicketColor.RED) Color.Red.copy(alpha = 0.1f) else Color.Blue.copy(alpha = 0.1f)
     val fontColor = if (ticket.ticketColor == TicketColor.RED) Color.Red else Color.Blue
 
@@ -90,6 +94,7 @@ fun TrainTicketCard(
             .padding(vertical = 8.dp)
             .background(color = backgroundColor, shape = MaterialTheme.shapes.medium)
             .padding(16.dp)
+            .clickable { expanded.value = !expanded.value }
     ) {
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -168,6 +173,26 @@ fun TrainTicketCard(
             fontSize = 14.sp,
             color = fontColor.copy(alpha = 0.6f)
         )
+
+        if (expanded.value) {
+            Divider(modifier = Modifier.padding(vertical = 8.dp))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                TextButton(
+                    onClick = onEditTicket,
+                    colors = ButtonDefaults.textButtonColors(
+                        contentColor = MaterialTheme.colorScheme.primary
+                    )
+                ) {
+                    Icon(Icons.Default.Edit, contentDescription = "编辑车票")
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text("编辑")
+                }
+            }
+        }
     }
 }
 @Composable
@@ -362,7 +387,8 @@ fun ProductCard(
     fontColor: Color,
     backgroundColor: Color,
     maintenances: List<ProductMaintenance>,
-    onAddMaintenance: () -> Unit = {}
+    onAddMaintenance: () -> Unit = {},
+    onEditProduct: () -> Unit = {}
 ) {
     // 计算维护费用总和
     val maintenanceTotalCost = remember(maintenances) {
@@ -373,10 +399,27 @@ fun ProductCard(
     val initialCost = remember(product.totalCost, maintenanceTotalCost.value) {
         mutableStateOf(product.totalCost - maintenanceTotalCost.value)
     }
-    
+    val remainingCosts = remember {
+        mutableStateListOf<Double>()
+    }
     // 计算总花费（包括维护费用）
     val totalSpent = remember(product, maintenances) {
-        mutableStateOf(product.totalCost + maintenances.sumOf { it.cost })
+        var remainingCost = product.totalCost
+        // 初始化剩余成本，先减去所有的维护费用
+        remainingCost = product.totalCost - maintenanceTotalCost.value
+        var lastMaintenanceTime = product.buyTime
+        remainingCosts.clear()
+        remainingCosts.add(remainingCost)
+
+        maintenances.forEach { maintenance ->
+            val daysSinceLastMaintenance = ((maintenance.maintainTime - lastMaintenanceTime) / (1000 * 60 * 60 * 24)).toInt()
+            remainingCost -= daysSinceLastMaintenance * product.estimatedCost
+            remainingCost += maintenance.cost
+            remainingCosts.add(remainingCost)
+            lastMaintenanceTime = maintenance.maintainTime
+        }
+
+        mutableStateOf(remainingCost)
     }
     
     // 计算进度
@@ -384,6 +427,7 @@ fun ProductCard(
         mutableStateOf(((System.currentTimeMillis() - product.buyTime) / (1000 * 60 * 60 * 24)).toInt())
     }
     
+    // 计算总天数
     val totalDays = remember(totalSpent.value, product.estimatedCost) {
         mutableStateOf((totalSpent.value / product.estimatedCost).toInt())
     }
@@ -455,7 +499,7 @@ fun ProductCard(
                     color = fontColor
                 )
                 Text(
-                    text = "购买日期: ${com.example.litenote.utils.timeStempToTime(product.buyTime, 9)}",
+                    text = "购买日期: ${com.example.litenote.utils.timeStempToTime(product.buyTime, 1)}",
                     fontSize = 14.sp,
                     color = fontColor.copy(alpha = 0.6f)
                 )
@@ -500,18 +544,36 @@ fun ProductCard(
         
         if (expanded.value) {
             Divider(modifier = Modifier.padding(vertical = 8.dp))
-            Text(
-                text = "记录",
-                fontSize = 16.sp,
-                fontWeight = FontWeight.Bold,
-                color = fontColor
-            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "记录",
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = fontColor
+                )
+                
+                TextButton(
+                    onClick = onEditProduct,
+                    colors = ButtonDefaults.textButtonColors(
+                        contentColor = MaterialTheme.colorScheme.primary
+                    )
+                ) {
+                    Icon(Icons.Default.Edit, contentDescription = "编辑产品")
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text("编辑")
+                }
+            }
             
             MaintenanceTimeline(
                 maintenances = maintenances,
                 initialCost = initialCost.value,
                 buyTime = product.buyTime,
-                fontColor = fontColor
+                fontColor = fontColor,
+                remainingCosts = remainingCosts
             )
             
             TextButton(
@@ -531,7 +593,8 @@ private fun MaintenanceTimeline(
     maintenances: List<ProductMaintenance>,
     initialCost: Double,
     buyTime: Long,
-    fontColor: Color
+    fontColor: Color,
+    remainingCosts: SnapshotStateList<Double>
 ) {
     Column(
         modifier = Modifier.padding(start = 16.dp, top = 8.dp)
@@ -541,17 +604,20 @@ private fun MaintenanceTimeline(
             cost = initialCost,
             time = buyTime,
             isInitial = true,
-            fontColor = fontColor
+            fontColor = fontColor,
+            remainingCosts = remainingCosts[0]
         )
         
+        
         // 维护记录
-        maintenances.forEach { maintenance ->
+        maintenances.forEachIndexed { index, maintenance ->
             TimelineItem(
                 cost = maintenance.cost,
                 time = maintenance.maintainTime,
                 isInitial = false,
                 name = maintenance.name,
-                fontColor = fontColor
+                fontColor = fontColor,
+                remainingCosts = remainingCosts[index + 1]
             )
         }
     }
@@ -563,7 +629,8 @@ private fun TimelineItem(
     time: Long,
     isInitial: Boolean,
     name: String = "",
-    fontColor: Color
+    fontColor: Color,
+    remainingCosts: Double
 ) {
     Row(
         modifier = Modifier
@@ -616,12 +683,19 @@ private fun TimelineItem(
         }
 
         // 右侧时间
-        Text(
-            text = timeStempToTime(time, 1),
+        Column {
+            Text(
+                text = timeStempToTime(time, 1),
+                fontSize = 12.sp,
+                color = fontColor.copy(alpha = 0.6f)
+            )
+            Text(
+            text = "¥$remainingCosts",
             fontSize = 12.sp,
             color = fontColor.copy(alpha = 0.6f),
             modifier = Modifier.padding(start = 8.dp)
         )
+        }
     }
 }
 
@@ -654,6 +728,19 @@ fun ProductList(
                                 context.startActivity(
                                     Intent(context, AddMaintenanceActivity::class.java)
                                         .putExtra("productId", product.id)
+                                )
+                            },
+                            onEditProduct = {
+                                context.startActivity(
+                                    Intent(context, AddProductActivity::class.java).apply {
+                                        putExtra("editMode", true)
+                                        putExtra("productId", product.id)
+                                        putExtra("productName", product.name)
+                                        putExtra("productTotalCost", product.totalCost)
+                                        putExtra("productEstimatedCost", product.estimatedCost)
+                                        putExtra("productType", product.type)
+                                        putExtra("productBuyTime", product.buyTime)
+                                    }
                                 )
                             }
                         )

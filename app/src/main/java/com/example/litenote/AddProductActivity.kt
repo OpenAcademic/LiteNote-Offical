@@ -37,10 +37,21 @@ enum class ProductType(val typeName: String) {
     OTHER("其他设备")
 }
 class AddProductActivity : ComponentActivity() {
+    private val showDeleteDialog = mutableStateOf(false)
     @OptIn(ExperimentalMaterial3Api::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+        
+        // 获取传入的产品信息
+        val editMode = intent.getBooleanExtra("editMode", false)
+        val productId = intent.getIntExtra("productId", -1)
+        val productName = intent.getStringExtra("productName") ?: ""
+        val productTotalCost = intent.getDoubleExtra("productTotalCost", 0.0)
+        val productEstimatedCost = intent.getDoubleExtra("productEstimatedCost", 0.0)
+        val productType = intent.getStringExtra("productType") ?: ""
+        val productBuyTime = intent.getLongExtra("productBuyTime", System.currentTimeMillis())
+        
         setContent {
             LiteNoteTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
@@ -53,11 +64,12 @@ class AddProductActivity : ComponentActivity() {
                             )
                             .padding(20.dp)
                     ) {
-                        val name = remember { mutableStateOf("") }
-                        val totalCost = remember { mutableStateOf("") }
-                        val estimatedCost = remember { mutableStateOf("") }
-                        val type = remember { mutableStateOf("") }
-                        val buyTime = remember { mutableStateOf(System.currentTimeMillis()) }
+
+                        val name = remember { mutableStateOf(if (editMode) productName else "") }
+                        val totalCost = remember { mutableStateOf(if (editMode) productTotalCost.toString() else "") }
+                        val estimatedCost = remember { mutableStateOf(if (editMode) productEstimatedCost.toString() else "") }
+                        val type = remember { mutableStateOf(if (editMode) productType else "") }
+                        val buyTime = remember { mutableStateOf(if (editMode) productBuyTime else System.currentTimeMillis()) }
                         val showDatePicker = remember { mutableStateOf(false) }
                         val fontColor = getDarkModeTextColor(this@AddProductActivity)
                         var expanded = remember { mutableStateOf(false) }
@@ -192,29 +204,110 @@ class AddProductActivity : ComponentActivity() {
                                         "请填写所有字段",
                                         Toast.LENGTH_SHORT).show()
                                 } else {
-                                    thread {
-                                        val product = Product(
-                                            name = name.value,
-                                            totalCost = totalCost.value.toDouble(),
-                                            estimatedCost = estimatedCost.value.toDouble(),
-                                            type = type.value,
-                                            buyTime = buyTime.value
-                                        )
-                                        CodeDatabase.getDatabase(this@AddProductActivity)
-                                            .productDao()
-                                            .insert(product)
-                                        
-                                        runOnUiThread {
-                                            Toast.makeText(this@AddProductActivity,
-                                                "保存成功",
-                                                Toast.LENGTH_SHORT).show()
-                                            finish()
+                                    if (editMode) {
+                                        thread {
+                                            val product = Product(
+                                                id = productId,
+                                                name = name.value,
+                                                totalCost = totalCost.value.toDouble(),
+                                                estimatedCost = estimatedCost.value.toDouble(),
+                                                type = type.value,
+                                                buyTime = buyTime.value
+                                            )
+
+                                            CodeDatabase.getDatabase(this@AddProductActivity)
+                                                .productDao()
+                                                .update(product)
+
+                                            runOnUiThread {
+                                                Toast.makeText(this@AddProductActivity,
+                                                    "保存成功",
+                                                    Toast.LENGTH_SHORT).show()
+                                                finish()
+                                            }
+                                        }
+                                    }else{
+                                        thread {
+                                            val product = Product(
+                                                name = name.value,
+                                                totalCost = totalCost.value.toDouble(),
+                                                estimatedCost = estimatedCost.value.toDouble(),
+                                                type = type.value,
+                                                buyTime = buyTime.value
+                                            )
+
+                                            CodeDatabase.getDatabase(this@AddProductActivity)
+                                                .productDao()
+                                                .insert(product)
+                                            
+                                            runOnUiThread {
+                                                Toast.makeText(this@AddProductActivity,
+                                                    "保存成功",
+                                                    Toast.LENGTH_SHORT).show()
+                                                finish()
+                                            }
                                         }
                                     }
                                 }
                             }
                         ) {
                             Text("保存")
+                        }
+
+                        if (editMode) {
+                            Spacer(modifier = Modifier.height(5.dp))
+                            
+                            Button(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = 16.dp),
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = MaterialTheme.colorScheme.error
+                                ),
+                                onClick = {
+                                    // 显示确认对话框
+                                    showDeleteDialog.value = true
+                                }
+                            ) {
+                                Text("删除产品")
+                            }
+                        }
+
+                        // 添加删除确认对话框
+                        if (showDeleteDialog.value) {
+                            AlertDialog(
+                                onDismissRequest = { showDeleteDialog.value = false },
+                                title = { Text("确认删除") },
+                                text = { Text("确定要删除该产品吗？删除后将无法恢复。") },
+                                confirmButton = {
+                                    TextButton(
+                                        onClick = {
+                                            showDeleteDialog.value = false
+                                            thread {
+                                                val db = CodeDatabase.getDatabase(this@AddProductActivity)
+                                                db.productDao().deleteById(productId)
+                                                runOnUiThread {
+                                                    Toast.makeText(
+                                                        this@AddProductActivity,
+                                                        "删除成功",
+                                                        Toast.LENGTH_SHORT
+                                                    ).show()
+                                                    finish()
+                                                }
+                                            }
+                                        }
+                                    ) {
+                                        Text("确定")
+                                    }
+                                },
+                                dismissButton = {
+                                    TextButton(
+                                        onClick = { showDeleteDialog.value = false }
+                                    ) {
+                                        Text("取消")
+                                    }
+                                }
+                            )
                         }
                     }
                 }
