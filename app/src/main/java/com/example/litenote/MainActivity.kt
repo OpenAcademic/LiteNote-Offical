@@ -1,4 +1,10 @@
-package com.example.litenote
+/*
+ * Copyright (C) 2024 The LiteNote Project
+ * @author OpenAcademic
+ * @version 1.0
+ * 
+ */
+package  com.example.litenote
 
 import android.content.Intent
 import android.os.Bundle
@@ -34,6 +40,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -55,6 +62,9 @@ import com.example.litenote.dbutils.LogDBUtils
 import com.example.litenote.dbutils.OverLookOBJ
 import com.example.litenote.dbutils.PortDao
 import com.example.litenote.entity.Code
+import com.example.litenote.entity.Product
+import com.example.litenote.entity.ProductMaintenance
+import com.example.litenote.entity.TrainTicket
 import com.example.litenote.service.MessageService
 import com.example.litenote.sub.AddCodeActivity
 import com.example.litenote.ui.theme.LiteNoteTheme
@@ -76,6 +86,10 @@ import com.example.litenote.widget.SelectTypeView
 import com.example.litenote.widget.SettingItems
 import com.example.litenote.widget.SettingsPage
 import com.example.litenote.widget.ToolBar
+import com.example.litenote.widget.ProductCard
+import com.example.litenote.widget.ProductList
+import com.example.litenote.widget.TrainTicketList
+import kotlin.concurrent.thread
 
 
 class MainActivity : ComponentActivity() {
@@ -88,6 +102,8 @@ class MainActivity : ComponentActivity() {
     private val isDelete = mutableStateOf(false)
     private val kds = mutableStateListOf<String>()
     private val ports = mutableStateListOf<String>()
+    private val products = mutableStateListOf<Product>()
+    private val maintenanceMap = mutableStateMapOf<Int, List<ProductMaintenance>>()
 
     private fun initService() {
         Log.d("MainActivity",
@@ -99,6 +115,20 @@ class MainActivity : ComponentActivity() {
             startForegroundService(intent)
         }
     }
+    private val trainTickets = mutableStateListOf<TrainTicket>()
+private val currentPage = mutableStateOf(1)
+private val totalTickets = mutableStateOf(0)
+
+private fun loadTrainTickets() {
+    val db = CodeDatabase.getDatabase(this)
+    thread {
+        totalTickets.value = db.trainTicketDao().getTicketCount()
+        trainTickets.clear()
+        trainTickets.addAll(
+            db.trainTicketDao().getTicketsByPage((currentPage.value - 1) * 10)
+        )
+    }
+}
     private fun initDb() {
         val lists = List<String>(1) { "34555553" }
 
@@ -119,6 +149,12 @@ class MainActivity : ComponentActivity() {
 
         }
         else if (currTag.value == 2) {
+            loadProducts()
+        }
+        else if (currTag.value == 3) {
+            loadTrainTickets()
+        }
+        else if (currTag.value == 4) {
             settings.clear()
             // do something
             //var yz_nums = PortDao.getCount(this@MainActivity)
@@ -146,7 +182,7 @@ class MainActivity : ComponentActivity() {
 
                     val intent = Intent(
                         this@MainActivity,
-                        PolicyActivity::class.java
+                        AboutActivity::class.java
                     )
                     intent.putExtra("urls", "https://oac.ac.cn/")
                     startActivity(intent)
@@ -211,6 +247,21 @@ class MainActivity : ComponentActivity() {
                 }
             )
 
+            settings.add(
+                SettingItems(
+                    R.string.open_source_t,0,0
+                ) {
+                    // file:///android_asset/yhxy.html
+                    val intent = Intent(
+                        this@MainActivity,
+                        PolicyActivity::class.java
+                    )
+                    intent.putExtra("urls", "https://github.com/OpenAcademic/LiteNote-Offical")
+                    startActivity(intent)
+
+                }
+            )
+
 
 
         }
@@ -241,12 +292,25 @@ class MainActivity : ComponentActivity() {
         ports.addAll(ports_demo)
         ports.addAll(PortDao.getAllPostNames(this@MainActivity))
     }
+    private fun loadProducts() {
+        val db = CodeDatabase.getDatabase(this)
+        products.clear()
+        products.addAll(db.productDao().getAll())
+        thread{
+            // 加载每个产品的维护记录
+         products.forEach { product ->
+            maintenanceMap[product.id] = db.productMaintenanceDao()
+                .getMaintenancesByProductId(product.id)
+                .sortedBy { it.maintainTime }
+        }
+        }
+    }
     override fun onResume() {
         super.onResume()
         initService()
         initKds()
         initDb()
-
+        
     }
     val isKeyDelete = mutableStateOf(false)
     val isKeyEdit = mutableStateOf(false)
@@ -469,6 +533,53 @@ class MainActivity : ComponentActivity() {
                                         contentDescription = "menu")
                                 }
                             }
+                            else if (currTag.value == 2){
+                                IconButton(
+                                    onClick = {
+                                        val intent = Intent(this@MainActivity, AddProductActivity::class.java)
+                                        startActivity(intent)
+                                    },
+                                    modifier = Modifier
+                                        .size(90.dp)
+                                        .padding(5.dp)
+                                        .background(
+                                            getDarkModeBackgroundColor(
+                                                context = this@MainActivity,
+                                                level = 1
+                                            ),
+                                            shape = MaterialTheme.shapes.extraLarge
+
+                                        )
+                                        .padding(5.dp)
+                                ) {
+                                    Icon(imageVector = Icons.Default.Add,
+                                        contentDescription = "menu")
+                                }
+                            }
+                            else if (currTag.value == 3){
+                                IconButton(
+                                    onClick = {
+                                        val intent = Intent(this@MainActivity, AddTrainTicketActivity::class.java)
+                                        startActivity(intent)
+                                    },
+                                    modifier = Modifier
+                                        .size(90.dp)
+                                        .padding(5.dp)
+                                        .background(
+                                            getDarkModeBackgroundColor(
+                                                context = this@MainActivity,
+                                                level = 1
+                                            ),
+                                            shape = MaterialTheme.shapes.extraLarge
+
+                                        )
+                                        .padding(5.dp)
+                                ) {
+                                    Icon(imageVector = Icons.Default.Add,
+                                        contentDescription = "menu")
+                                }
+                            }
+
                         }
                     }
                 ) { innerPadding ->
@@ -736,7 +847,7 @@ class MainActivity : ComponentActivity() {
                                                             textAlign = TextAlign.Center,
                                                             color = getDarkModeTextColor(context = this@MainActivity),
                                                             fontSize = 25.sp,
-                                                            fontWeight = androidx.compose.ui.text.font.FontWeight.Bold
+                                                            fontWeight = FontWeight.Bold
                                                         )
                                                     }
                                                     TextButton(
@@ -766,7 +877,7 @@ class MainActivity : ComponentActivity() {
                                                             textAlign = TextAlign.Center,
                                                             color = getDarkModeTextColor(context = this@MainActivity),
                                                             fontSize = 25.sp,
-                                                            fontWeight = androidx.compose.ui.text.font.FontWeight.Bold
+                                                            fontWeight = FontWeight.Bold
                                                         )
                                                     }
 
@@ -862,15 +973,64 @@ class MainActivity : ComponentActivity() {
                                     EmptyView(getDarkModeTextColor(this@MainActivity))
                                 }
                             }
-                            2 -> AnimatedVisibility(visible = currTag.value==2){
+                            2 -> AnimatedVisibility(visible = currTag.value==2) {
+                                // do something
+                                ProductList(
+                                    context = this@MainActivity,
+                                    products = products,
+                                    maintenanceMap=maintenanceMap,
+                                    onAddClick = {
+                                        val intent = Intent(this@MainActivity, AddProductActivity::class.java)
+                                        startActivity(intent)
+                                    }
+                                )
+                            }
+                            3 -> AnimatedVisibility(visible = currTag.value==3) {
+                                TrainTicketList(
+                                    context = this@MainActivity,
+                                    tickets = trainTickets,
+                                    currentPage = currentPage.value,
+                                    totalCount = totalTickets.value,
+                                    onPageChange = { newPage ->
+                                        // 在原有的基础上加载新的数据
+                                        val db = CodeDatabase.getDatabase(this@MainActivity)
+                                        thread {
+                                            currentPage.value += 1
+                                            val newdata = db.trainTicketDao().getTicketsByPage((currentPage.value - 1) * 10)
+                                            if (newdata.isNotEmpty()) {
+                                                trainTickets.addAll(
+                                                    newdata
+                                                )
+                                            }else{
+                                                runOnUiThread {
+                                                    Toast.makeText(this@MainActivity,
+                                                        "没有更多数据了",
+                                                        Toast.LENGTH_SHORT).show()
+                                                    currentPage.value-=1
+                                                }
+                                            }
+
+                                        }
+                                    },
+                                    onAddClick = {
+                                        val intent = Intent(this@MainActivity, AddTrainTicketActivity::class.java)
+                                        startActivity(intent)
+                                    }
+                                )
+                            }
+                            4 -> AnimatedVisibility(visible = currTag.value==4){
                                 // do something
                                 SettingsPage(context = this@MainActivity, settingItems = settings, resources = resources)
                             }
+
                         }
+
                     }
                 }
             }
         }
     }
 }
+
+
 

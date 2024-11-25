@@ -1,4 +1,10 @@
-package com.example.litenote.widget
+/*
+ * Copyright (C) 2024 The LiteNote Project
+ * @author OpenAcademic
+ * @version 1.0
+ * 
+ */
+package  com.example.litenote.widget
 
 
 import android.annotation.SuppressLint
@@ -26,8 +32,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.example.litenote.R
 import com.example.litenote.utils.getDarkModeBackgroundColor
 import com.example.litenote.utils.getDarkModeTextColor
@@ -67,7 +75,6 @@ fun SettingsPage(
         modifier = Modifier
             .fillMaxSize()
             .padding(10.dp)
-
     ) {
         Column(
             verticalArrangement = Arrangement.Center,
@@ -84,14 +91,30 @@ fun SettingsPage(
                 .verticalScroll(
                     rememberScrollState()
                 )
-
         ) {
-            Image(painter = painterResource(id = R.mipmap.logo),
+            // 替换原来的Logo为应用名称和版本号
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
                 modifier = Modifier
-                    .fillMaxWidth(0.7f)
-                    .padding(top = 40.dp, bottom = 40.dp),
-                contentDescription = "logo")
+                    .fillMaxWidth()
+                    .padding(top = 40.dp, bottom = 40.dp)
+            ) {
+                Text(
+                    text = resources.getString(R.string.app_name),
+                    fontSize = 40.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = getDarkModeTextColor(context)
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = "版本 ${context.packageManager.getPackageInfo(context.packageName, 0).versionName}",
+                    fontSize = 16.sp,
+                    color = getDarkModeTextColor(context).copy(alpha = 0.6f)
+                )
+            }
+            
             Spacer(modifier = Modifier.height(10.dp))
+            
             settingItems.forEachIndexed { index, settingItem ->
                 when (settingItem.type){
                     0 -> TextButton(
@@ -168,11 +191,19 @@ fun SettingsPage(
                 .fillMaxSize()
         ) {
             Spacer(modifier = Modifier.height(10.dp))
-            Image(painter = painterResource(id = R.mipmap.slogin),
-                modifier = Modifier
-                    .fillMaxWidth(0.7f)
-                    .padding(top = 20.dp),
-                contentDescription = "logo")
+            Text(
+                text = "Copyright © 2024 "+resources.getString(R.string.app_name),
+                fontSize = 14.sp,
+                color = getDarkModeTextColor(context).copy(alpha = 0.6f),
+                modifier = Modifier.padding(top = 20.dp)
+            )
+            Text(
+                text = "Powered by LiteNote",
+                fontSize = 14.sp,
+                color = getDarkModeTextColor(context).copy(alpha = 0.6f),
+                modifier = Modifier.padding(top = 20.dp)
+            )
+
         }
     }
 

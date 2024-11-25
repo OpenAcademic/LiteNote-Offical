@@ -1,4 +1,10 @@
-package com.example.litenote.widget
+/*
+ * Copyright (C) 2024 The LiteNote Project
+ * @author OpenAcademic
+ * @version 1.0
+ * 
+ */
+package  com.example.litenote.widget
 
 import android.content.Context
 import androidx.compose.foundation.background
@@ -18,9 +24,14 @@ import androidx.compose.ui.unit.sp
 import com.example.litenote.R
 import com.example.litenote.utils.getDarkModeBackgroundColor
 import com.example.litenote.utils.getDarkModeTextColor
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.rememberScrollState
+
 val TOOLBARS = listOf(
     R.string.home,
     R.string.overview,
+    R.string.product,
+    R.string.tickets,
     R.string.setting
 )
 @Composable
@@ -32,10 +43,10 @@ fun ToolBarMenu(
     resources: android.content.res.Resources,
 ) {
     Row(
-        modifier = Modifier.clickable {
-                tap()
-            },
-        verticalAlignment = Alignment.Bottom,
+        modifier = Modifier
+            .horizontalScroll(rememberScrollState())
+            .clickable { tap() },
+        verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.Start
     ) {
         Text(
@@ -57,8 +68,9 @@ fun ToolBarTitle(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(15.dp),
-        verticalAlignment = Alignment.Bottom,
+            .horizontalScroll(rememberScrollState())
+            .padding(horizontal = 15.dp, vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.Start
     ) {
         Text(
@@ -82,21 +94,21 @@ fun ToolBar(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(15.dp),
-        verticalAlignment = Alignment.Bottom,
-        horizontalArrangement = Arrangement.Start
+            .horizontalScroll(rememberScrollState())
+            .padding(horizontal = 15.dp, vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        for (i in TOOLBARS.indices) {
+        TOOLBARS.forEachIndexed { index, titleRes ->
             Text(
-                text = resources.getString(TOOLBARS[i]),
-                fontSize =  if (i == currTag) 30.sp else 20.sp,
-                fontWeight = if (i == currTag) FontWeight.Bold else FontWeight.Normal,
+                text = resources.getString(titleRes),
+                fontSize = if (index == currTag) 30.sp else 20.sp,
+                fontWeight = if (index == currTag) FontWeight.Bold else FontWeight.Normal,
                 color = getDarkModeTextColor(context),
-                modifier = Modifier.padding(5.dp).clickable {
-                    onTagChange(i)
-                }
+                modifier = Modifier
+                    .clickable { onTagChange(index) }
+                    .padding(vertical = 5.dp)
             )
         }
-
     }
 }

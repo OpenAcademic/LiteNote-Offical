@@ -99,4 +99,13 @@
     <string name="loading">加载中</string>
     <string name="llm_based_infos">使用LLM的时候你可以多次解析。</string>
     <string name="llm_model">推理模型</string>
+    <string name="help_llm">帮助改善大模型</string>
+    <string name="help_llm_desc">为了进一步增强大模型的识别能力，现征集相关数据集。您提供的数据将用于改进模型的识别准确率。</string>
+    <string name="input_msg">输入短信内容</string>
+    <string name="input_code">输入取件码</string>
+    <string name="input_station">输入驿站名称</string>
+    <string name="input_address">输入驿站地址</string>
+    <string name="input_company">输入快递公司</string>
+    <string name="submit">提交数据</string>
+    <string name="product">产品管理</string>
 </resources>

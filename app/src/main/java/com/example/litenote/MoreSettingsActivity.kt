@@ -1,6 +1,13 @@
-package com.example.litenote
+/*
+ * Copyright (C) 2024 The LiteNote Project
+ * @author OpenAcademic
+ * @version 1.0
+ * 
+ */
+package  com.example.litenote
 
 import android.content.Context
+import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import androidx.activity.ComponentActivity
@@ -48,6 +55,7 @@ import com.example.litenote.utils.getDarkModeTextColor
 import com.example.litenote.utils.getModeType
 import com.example.litenote.utils.getModelList
 import com.example.litenote.widget.SelectTypeView
+import com.example.litenote.widget.SettingItems
 import com.example.litenote.widget.SubText
 import com.example.litenote.widget.ToolBarTitle
 import okhttp3.Call
@@ -95,6 +103,18 @@ class MoreSettingsActivity : ComponentActivity() {
             this@MoreSettingsActivity,
             "yanzhengma"
         )
+        settings.clear()
+        settings.add(
+            SettingItems(
+                R.string.help_llm, 0, 0
+            ) {
+                val intent = Intent(
+                    this@MoreSettingsActivity,
+                    HelpLLMActivity::class.java
+                )
+                startActivity(intent)
+            }
+        )
     }
     val  is_downloading = mutableStateOf(false)
     val file_isExist = mutableStateOf(false)
@@ -107,6 +127,7 @@ class MoreSettingsActivity : ComponentActivity() {
     var darkmodel = mutableStateOf(ModeType.AUTO)
 
     var select_index = mutableStateOf(0)
+    var settings = mutableStateListOf<SettingItems>()
     fun check_file(){
         val filesDirPath = Objects.requireNonNull(this@MoreSettingsActivity.getExternalFilesDir("model"))?.path
         // 检查 filesDirPath + "/" + "gemma-1.1-2b-it-cpu-int4.bin" 是否存在
@@ -405,7 +426,17 @@ class MoreSettingsActivity : ComponentActivity() {
                             }
                             Text(text = resources.getString(R.string.yanzhengma_info), fontSize = 12.sp, modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Start)
 
-
+                            for (item in settings){
+                                Row(
+                                    modifier = Modifier.fillMaxWidth().clickable{
+                                        item.func()
+                                    },
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.SpaceBetween
+                                ) {
+                                    Text(text = resources.getString(item.name), fontSize = 25.sp)
+                                }
+                            }
 
 
 

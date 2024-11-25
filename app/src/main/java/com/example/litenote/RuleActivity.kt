@@ -1,4 +1,10 @@
-package com.example.litenote
+/*
+ * Copyright (C) 2024 The LiteNote Project
+ * @author OpenAcademic
+ * @version 1.0
+ * 
+ */
+package  com.example.litenote
 
 import android.content.Context
 import android.os.Bundle

@@ -1,4 +1,10 @@
-package com.example.litenote.sub.ui.theme
+/*
+ * Copyright (C) 2024 The LiteNote Project
+ * @author OpenAcademic
+ * @version 1.0
+ * 
+ */
+package  com.example.litenote.sub.ui.theme
 
 import android.app.Activity
 import android.os.Build

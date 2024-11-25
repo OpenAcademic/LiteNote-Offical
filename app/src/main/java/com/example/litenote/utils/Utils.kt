@@ -1,27 +1,52 @@
-package com.example.litenote.utils
+/*
+ * Copyright (C) 2024 The LiteNote Project
+ * @author OpenAcademic
+ * @version 1.0
+ * 
+ */
+package  com.example.litenote.utils
 
 import android.annotation.SuppressLint
 import android.app.DownloadManager
 import android.content.Context
 import android.net.Uri
 import android.util.Log
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.core.app.ActivityCompat.requestPermissions
 import androidx.glance.GlanceTheme
 import androidx.glance.unit.ColorProvider
+import com.example.litenote.ProductType
 import com.example.litenote.R
 import okhttp3.Callback
 import okhttp3.OkHttpClient
 import okhttp3.Request
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.*
+import androidx.compose.ui.graphics.painter.Painter
 import java.text.SimpleDateFormat
 fun getApplicationStatus(
     context: Context
 ): Boolean {
     val sharePref = context.getSharedPreferences("init", Context.MODE_PRIVATE)
     return sharePref.getBoolean("isFirst", true)
+}
+
+
+@Composable
+fun getProductTypeIcon(type: String)   : Painter = when(type){
+    ProductType.PHONE.typeName -> painterResource(id = R.mipmap.phone)
+    ProductType.TABLET.typeName -> painterResource(id = R.mipmap.pbdn)
+    ProductType.LAPTOP.typeName ->  painterResource(id = R.mipmap.bjbdn)
+    ProductType.WEARABLE.typeName -> painterResource(id = R.mipmap.watch)
+    ProductType.HEADPHONE.typeName ->  painterResource(id = R.mipmap.ej)
+    ProductType.MOUSE.typeName -> painterResource(id = R.mipmap.sb)
+    ProductType.SMART_DEVICE.typeName -> painterResource(id = R.mipmap.smartdevice)
+    else ->  painterResource(id = R.mipmap.other)
 }
 fun getApplicationAgentStatus(
     context: Context
@@ -247,5 +272,15 @@ fun getWidgetDarkModeBackgroundColor2(
         } else {
             ColorProvider(Color.White)
         }
+    }
+}
+
+fun daysToYearDays(totalDays: Int): String {
+    val years = totalDays / 365
+    val days = totalDays % 365
+    return when {
+        years > 0 && days > 0 -> "${years}年${days}天"
+        years > 0 -> "${years}年"
+        else -> "${days}天"
     }
 }

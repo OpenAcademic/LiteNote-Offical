@@ -1,4 +1,10 @@
-package com.example.litenote.service
+/*
+ * Copyright (C) 2024 The LiteNote Project
+ * @author OpenAcademic
+ * @version 1.0
+ * 
+ */
+package  com.example.litenote.service
 
 import android.app.Service
 import android.content.Intent

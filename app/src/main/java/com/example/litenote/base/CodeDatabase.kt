@@ -1,4 +1,10 @@
-package com.example.litenote.base
+/*
+ * Copyright (C) 2024 The LiteNote Project
+ * @author OpenAcademic
+ * @version 1.0
+ * 
+ */
+package  com.example.litenote.base
 
 import android.content.Context
 import androidx.room.Database
@@ -12,6 +18,9 @@ import com.example.litenote.dao.ExpressDao
 import com.example.litenote.dao.FormatDao
 import com.example.litenote.dao.LogDao
 import com.example.litenote.dao.PortsDao
+import com.example.litenote.dao.ProductDao
+import com.example.litenote.dao.ProductMaintenanceDao
+import com.example.litenote.dao.TrainTicketDao
 import com.example.litenote.entity.*
 import com.google.gson.Gson
 
@@ -21,8 +30,11 @@ import com.google.gson.Gson
                       CodeDetail::class,
                       PostStation::class,
                       Express::class,
-                        Logbean::class
-                     ], version = 3, exportSchema = false)
+                        Logbean::class,
+                        Product::class,
+                        ProductMaintenance::class,
+                        TrainTicket::class
+                     ], version = 8, exportSchema = false)
 abstract class CodeDatabase : RoomDatabase() {
 
     abstract fun codeDao(): CodeDao
@@ -31,6 +43,9 @@ abstract class CodeDatabase : RoomDatabase() {
     abstract fun expressDao(): ExpressDao
     abstract fun log(): LogDao
     abstract fun portsDao(): PortsDao
+    abstract fun productDao(): ProductDao
+    abstract fun productMaintenanceDao(): ProductMaintenanceDao
+    abstract fun trainTicketDao(): TrainTicketDao
 
 
     companion object {
@@ -49,11 +64,107 @@ abstract class CodeDatabase : RoomDatabase() {
                     .addMigrations(
                         MIGRATION_2_3()
                     )
+                    .addMigrations(
+                        MIGRATION_3_4()
+                    ).addMigrations(
+                        MIGRATION_4_5()
+                    ).addMigrations(
+                        MIGRATION_5_6()
+                    ).addMigrations(
+                        MIGRATION_6_7
+                    ).addMigrations(
+                        MIGRATION_7_8
+                    ).fallbackToDestructiveMigration()
                     .build()
                 INSTANCE = instance
                 return instance
             }
         }
+    }
+}
+// 添加新的迁移
+class MIGRATION_5_6 : Migration(5, 6) {
+    override fun migrate(database: SupportSQLiteDatabase) {
+        // 创建临时表
+        database.execSQL(
+            "CREATE TABLE product_maintenance_temp (" +
+            "id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, " +
+            "pid INTEGER NOT NULL, " +
+            "name TEXT NOT NULL DEFAULT '常规维护', " +  // 添加新字段
+            "cost REAL NOT NULL, " +
+            "maintainTime INTEGER NOT NULL" +
+            ")"
+        )
+        
+        // 复制数据
+        database.execSQL(
+            "INSERT INTO product_maintenance_temp (id, pid, cost, maintainTime) " +
+            "SELECT id, pid, cost, maintainTime FROM product_maintenance"
+        )
+        
+        // 删除旧表
+        database.execSQL("DROP TABLE product_maintenance")
+        
+        // 重命名新表
+        database.execSQL("ALTER TABLE product_maintenance_temp RENAME TO product_maintenance")
+    }
+}
+
+class MIGRATION_4_5 : Migration(
+    4,
+    5
+) {
+    override fun migrate(database: SupportSQLiteDatabase) {
+        /**
+         * @Entity(tableName = "product_maintenance")
+data class ProductMaintenance(
+    @PrimaryKey(autoGenerate = true)
+    val id: Int = 0,
+    val pid: Int,                // 产品ID
+    val cost: Double,            // 维护费用
+    val maintainTime: Long = System.currentTimeMillis()  // 维护时间
+)
+         */
+        val sql = "CREATE TABLE IF NOT EXISTS product_maintenance(" +
+                "id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, pid INTEGER NOT NULL, " +
+                "cost REAL default 0 NOT NULL ," +
+                "maintainTime INTEGER NOT NULL" +
+                ")"
+
+        database.execSQL(sql)
+
+    }
+}
+class MIGRATION_3_4 : Migration(
+    3,
+    4
+) {
+    override fun migrate(database: SupportSQLiteDatabase) {
+        // 创建产品表
+        /**
+         * 
+@Entity(tableName = "products")
+data class Product(
+    @PrimaryKey(autoGenerate = true)
+    val id: Long = 0,
+    val name: String,           // 产品名称
+    val totalCost: Double,      // 产品总成本
+    val estimatedCost: Double,  // 预估成本(元/天)
+    val type: String ,          // 产品类型
+    val buyTime: Long = System.currentTimeMillis(), // 购买时间
+    val createTime: Long = System.currentTimeMillis()
+)
+         */
+        val sql = "CREATE TABLE IF NOT EXISTS products (" +
+            "id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, " +
+            "name TEXT NOT NULL, " +
+            "totalCost REAL NOT NULL, " +
+            "estimatedCost REAL NOT NULL, " +
+            "type TEXT NOT NULL, " +
+            "buyTime INTEGER NOT NULL, " +
+            "createTime INTEGER NOT NULL" +
+            ")"
+        database.execSQL(sql)
     }
 }
 class MIGRATION_2_3 : Migration(
@@ -87,4 +198,76 @@ class MIGRATION_1_2 : Migration(
 
     }
 
+}
+
+val MIGRATION_6_7 = object : Migration(6, 7) {
+    override fun migrate(database: SupportSQLiteDatabase) {
+        database.execSQL(
+            """
+            CREATE TABLE IF NOT EXISTS train_ticket (
+                id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                departure TEXT NOT NULL,
+                departureTime TEXT NOT NULL,
+                arrival TEXT NOT NULL,
+                arrivalTime TEXT NOT NULL,
+                trainNumber TEXT NOT NULL,
+                trainType TEXT,
+                passenger TEXT NOT NULL,
+                travelDate INTEGER NOT NULL,
+                ticketColor TEXT NOT NULL,
+                note TEXT,
+                insertTime INTEGER NOT NULL DEFAULT 0
+            )
+            """
+        )
+    }
+}
+
+val MIGRATION_7_8 = object : Migration(7, 8) {
+    override fun migrate(database: SupportSQLiteDatabase) {
+        // 创建临时表
+        database.execSQL(
+            """
+            CREATE TABLE train_ticket_temp (
+                id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                departure TEXT NOT NULL,
+                departureTime INTEGER NOT NULL,
+                arrival TEXT NOT NULL,
+                arrivalTime INTEGER NOT NULL,
+                trainNumber TEXT NOT NULL,
+                trainType TEXT,
+                passenger TEXT NOT NULL,
+                travelDate INTEGER NOT NULL,
+                ticketColor TEXT NOT NULL,
+                note TEXT,
+                insertTime INTEGER NOT NULL DEFAULT 0
+            )
+            """
+        )
+        
+        // 转换旧数据
+        database.execSQL(
+            """
+            INSERT INTO train_ticket_temp (
+                id, departure, departureTime, arrival, arrivalTime,
+                trainNumber, trainType, passenger, travelDate,
+                ticketColor, note, insertTime
+            )
+            SELECT 
+                id, departure, 
+                strftime('%s', departureTime) * 1000, 
+                arrival,
+                strftime('%s', arrivalTime) * 1000,
+                trainNumber, trainType, passenger, travelDate,
+                ticketColor, note, insertTime
+            FROM train_ticket
+            """
+        )
+        
+        // 删除旧表
+        database.execSQL("DROP TABLE train_ticket")
+        
+        // 重命名新表
+        database.execSQL("ALTER TABLE train_ticket_temp RENAME TO train_ticket")
+    }
 }

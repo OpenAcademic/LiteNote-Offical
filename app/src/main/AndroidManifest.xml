@@ -29,33 +29,55 @@
         android:theme="@style/Theme.LiteNote"
         android:usesCleartextTraffic="true"
         tools:targetApi="31">
+        <activity
+            android:name=".AddTrainTicketActivity"
+            android:exported="false"
+            android:label="@string/title_activity_add_train_ticket"
+            android:theme="@style/Theme.LiteNote" />
+        <activity
+            android:name=".AddMaintenanceActivity"
+            android:exported="false"
+            android:label="@string/title_activity_add_maintenance"
+            android:theme="@style/Theme.LiteNote" />
+        <activity
+            android:name=".AddProductActivity"
+            android:exported="false"
+            android:label="@string/title_activity_add_product"
+            android:theme="@style/Theme.LiteNote" />
+        <activity
+            android:name=".AboutActivity"
+            android:exported="false"
+            android:label="@string/title_activity_about"
+            android:theme="@style/Theme.LiteNote" />
+        <activity
+            android:name=".HelpLLMActivity"
+            android:exported="false"
+            android:label="@string/title_activity_help_llmactivity"
+            android:theme="@style/Theme.LiteNote" />
 
         <meta-data
             android:name="miuiWidgetVersion"
             android:value="1" />
+
         <receiver
             android:name=".desktopwidget.MIUIWidgetProvider"
-            android:process=":widgetProvider"
-            android:exported="false">
+            android:exported="true"
+            android:process=":widgetProvider">
             <meta-data
                 android:name="miuiWidgetRefresh"
                 android:value="exposure" />
-
             <meta-data
-
                 android:name="miuiWidgetRefreshMinInterval"
-            android:value="20000" />
-
-
+                android:value="20000" />
             <meta-data
                 android:name="miuiWidget"
                 android:value="true" />
-
 
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
                 <action android:name="miui.appwidget.action.APPWIDGET_UPDATE" />
             </intent-filter>
+
             <meta-data
                 android:name="android.appwidget.provider"
                 android:resource="@xml/m_i_u_i_widget_provider_info" />
