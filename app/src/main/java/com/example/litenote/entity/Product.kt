@@ -35,7 +35,7 @@ data class Product(
     //         notNull=true, primaryKeyPosition=0, defaultValue='undefined'}},
     //         foreignKeys=[], indices=[]}
     @PrimaryKey(autoGenerate = true)
-    val id: Int = 0,
+    var id: Int = 0,
     val name: String,           // 产品名称
     var totalCost: Double,      // 产品总成本
     val estimatedCost: Double,  // 预估成本(元/天)

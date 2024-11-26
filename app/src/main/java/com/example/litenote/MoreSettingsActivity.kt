@@ -87,6 +87,7 @@ class MoreSettingsActivity : ComponentActivity() {
     )
     val disable_default = mutableStateOf(false)
     val yanzhengma = mutableStateOf(false)
+    val device_style = mutableStateOf(false)
     override fun onResume() {
         super.onResume()
         llm_enable.value = ConfigUtils.checkSwitchConfig(
@@ -95,6 +96,10 @@ class MoreSettingsActivity : ComponentActivity() {
         // check_file()
         model.value = ConfigUtils.checkModelListConfig(this@MoreSettingsActivity)
         select_index.value = model_list.indexOf(model.value.show)
+        device_style.value = ConfigUtils.checkSwitchConfig(
+            this@MoreSettingsActivity,
+            "product_list_view"
+        )
         disable_default.value = ConfigUtils.checkSwitchConfig(
             this@MoreSettingsActivity,
             "disable_default"
@@ -115,6 +120,8 @@ class MoreSettingsActivity : ComponentActivity() {
                 startActivity(intent)
             }
         )
+        val sharedPreferences = getSharedPreferences("settings", Context.MODE_PRIVATE)
+
     }
     val  is_downloading = mutableStateOf(false)
     val file_isExist = mutableStateOf(false)
@@ -343,6 +350,89 @@ class MoreSettingsActivity : ComponentActivity() {
                                 )
                                 .padding(15.dp)
                                 .clip(RoundedCornerShape(15.dp))
+                        ) {
+                            Text(text = resources.getString(R.string.product_view_style), fontSize = 25.sp)
+                            val deviceStyle = remember {
+                                mutableStateOf(ConfigUtils.checkSwitchConfig(this@MoreSettingsActivity,"product_view_style"))
+                            }
+                            Row(
+                                Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceAround,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Column(
+                                    modifier = Modifier.padding(10.dp),
+                                    verticalArrangement = Arrangement.Center,
+                                    horizontalAlignment = Alignment.CenterHorizontally
+                                ) {
+                                    Image(painter = painterResource(id = R.mipmap.list_list),
+                                        modifier = Modifier
+                                            .width(100.dp)
+                                            .clip(RoundedCornerShape(15.dp))
+                                            .clickable {
+                                                ConfigUtils.setSwitchConfig(
+                                                    this@MoreSettingsActivity,
+                                                    "product_view_style", true
+                                                )
+                                                deviceStyle.value = true
+                                            },
+                                        contentDescription = "list" )
+                                    Text(text = resources.getString(R.string.product_view_style_list), fontSize = 20.sp)
+                                    androidx.compose.material3.RadioButton(
+                                        selected = deviceStyle.value == true,
+                                        modifier = Modifier.size(30.dp),
+                                        onClick = {
+                                            ConfigUtils.setSwitchConfig(this@MoreSettingsActivity,
+                                                "product_view_style",true)
+                                            deviceStyle.value = true
+                                        })
+                                }
+                                Column(
+                                    modifier = Modifier.padding(10.dp),
+                                    verticalArrangement = Arrangement.Center,
+                                    horizontalAlignment = Alignment.CenterHorizontally
+                                ) {
+                                    Image(painter = painterResource(id = R.mipmap.card_list),
+                                        modifier = Modifier
+                                            .width(100.dp)
+                                            .clip(RoundedCornerShape(15.dp))
+                                            .clickable {
+                                                ConfigUtils.setSwitchConfig(
+                                                    this@MoreSettingsActivity,
+                                                    "product_view_style", false
+                                                )
+                                                deviceStyle.value = false
+                                            },
+                                        contentDescription = "list" )
+                                    Text(text = resources.getString(R.string.product_view_style_grid), fontSize = 20.sp)
+                                    androidx.compose.material3.RadioButton(
+                                        selected = deviceStyle.value == false,
+                                        modifier = Modifier.size(30.dp),
+                                        onClick = {
+                                            ConfigUtils.setSwitchConfig(this@MoreSettingsActivity,
+                                                "product_view_style",false)
+                                            deviceStyle.value = false
+                                        })
+                                }
+
+                            }
+
+                        }
+
+                        Column(
+                            verticalArrangement = Arrangement.Center,
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(15.dp)
+                                .background(
+                                    color = getDarkModeBackgroundColor(
+                                        this@MoreSettingsActivity, 1
+                                    ),
+                                    shape = MaterialTheme.shapes.medium
+                                )
+                                .padding(15.dp)
+                                .clip(RoundedCornerShape(15.dp))
                         ){
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
@@ -437,6 +527,8 @@ class MoreSettingsActivity : ComponentActivity() {
                                     Text(text = resources.getString(item.name), fontSize = 25.sp)
                                 }
                             }
+
+                            
 
 
 

@@ -16,8 +16,8 @@ android {
         minSdk= 29
         maxSdk =35
         targetSdk =35
-        versionCode = 3000030
-        versionName = "2.3.0"
+        versionCode = 3000031
+        versionName = "2.3.1"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -115,6 +115,7 @@ dependencies {
         mapOf("dir" to "libs", "include" to listOf("*.jar", "*.aar"))
 
     ))
+    //implementation(libs.ezxhelper)
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)

@@ -8,8 +8,11 @@ package  com.example.litenote.widget
 
 import android.annotation.SuppressLint
 import android.content.Context
+import android.content.Intent
+import android.net.Uri
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -24,9 +27,12 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowForward
 import androidx.compose.material3.Button
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
@@ -52,6 +58,7 @@ import com.example.litenote.R
 import com.example.litenote.utils.expercessToResource
 import com.example.litenote.utils.getDarkModeBackgroundColor
 import com.example.litenote.utils.getDarkModeTextColor
+
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 
@@ -282,6 +289,41 @@ fun AboutPage(
                 color = getDarkModeTextColor(context),
                 textAlign = TextAlign.Justify
             )
+
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable {
+                        val intent = Intent(Intent.ACTION_SENDTO).apply {
+                            data = Uri.parse("mailto:wangxudong@oac.ac.cn")
+                        }
+                        context.startActivity(intent)
+                    }
+                    .padding(16.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "联系邮箱",
+                    color = getDarkModeTextColor(context)
+                )
+                Row(
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "wangxudong@oac.ac.cn",
+                        color = getDarkModeTextColor(context)
+                    )
+                    Icon(
+                        imageVector = Icons.Default.ArrowForward,
+                        contentDescription = "跳转到邮箱",
+                        tint = getDarkModeTextColor(context)
+                    )
+                }
+            }
+
         }
+
+
     }
 }

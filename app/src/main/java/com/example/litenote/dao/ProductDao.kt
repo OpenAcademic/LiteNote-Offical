@@ -23,6 +23,9 @@ interface ProductDao {
 
     @Query("SELECT * FROM products ORDER BY createTime DESC")
     fun getAll(): List<Product>
+
+    @Query("SELECT * FROM products ORDER BY createTime DESC LIMIT :count")
+    fun getRecentProducts(count: Int): List<Product>
     
     @Delete
     fun delete(product: Product)

@@ -68,6 +68,7 @@ import com.example.litenote.entity.TrainTicket
 import com.example.litenote.service.MessageService
 import com.example.litenote.sub.AddCodeActivity
 import com.example.litenote.ui.theme.LiteNoteTheme
+import com.example.litenote.utils.ConfigUtils
 import com.example.litenote.utils.DeviceUtils
 import com.example.litenote.utils.DownLoadFile
 import com.example.litenote.utils.NewPermissionUtils
@@ -88,6 +89,7 @@ import com.example.litenote.widget.SettingsPage
 import com.example.litenote.widget.ToolBar
 import com.example.litenote.widget.ProductCard
 import com.example.litenote.widget.ProductList
+import com.example.litenote.widget.ProductPages
 import com.example.litenote.widget.TrainTicketList
 import kotlin.concurrent.thread
 
@@ -346,7 +348,7 @@ private fun loadTrainTickets() {
                                             if (currTag.value == 0) 2 else currTag.value - 1
                                     } else if (dragAmount_curr.value < -15) {
 
-                                        currTag.value = (currTag.value + 1) % 3
+                                        currTag.value = (currTag.value + 1) % 5
                                     }
                                     initDb()
                                 },
@@ -491,7 +493,8 @@ private fun loadTrainTickets() {
                                         },
                                         modifier = Modifier
                                             .size(90.dp)
-                                            .padding(5.dp).border(
+                                            .padding(5.dp)
+                                            .border(
                                                 1.dp,
                                                 Color.Gray,
                                                 MaterialTheme.shapes.extraLarge
@@ -590,7 +593,8 @@ private fun loadTrainTickets() {
                             .padding(innerPadding)
                             .blur(
                                 if (isLongClick.value) 15.dp else 0.dp
-                            ).background(
+                            )
+                            .background(
                                 getDarkModeBackgroundColor(
                                     context = this@MainActivity,
                                     level = 0
@@ -834,9 +838,13 @@ private fun loadTrainTickets() {
                                                                 6.dp
                                                             )
                                                             .background(
-                                                                getDarkModeBackgroundColor(context = this@MainActivity, level = 1),
+                                                                getDarkModeBackgroundColor(
+                                                                    context = this@MainActivity,
+                                                                    level = 1
+                                                                ),
                                                                 shape = RoundedCornerShape(25.dp)
-                                                            ).padding(
+                                                            )
+                                                            .padding(
                                                                 5.dp
                                                             )
                                                     ) {
@@ -864,9 +872,13 @@ private fun loadTrainTickets() {
                                                                 6.dp
                                                             )
                                                             .background(
-                                                                getDarkModeBackgroundColor(context = this@MainActivity, level = 1),
+                                                                getDarkModeBackgroundColor(
+                                                                    context = this@MainActivity,
+                                                                    level = 1
+                                                                ),
                                                                 shape = RoundedCornerShape(25.dp)
-                                                            ).padding(
+                                                            )
+                                                            .padding(
                                                                 5.dp
                                                             )
                                                     ) {
@@ -974,16 +986,21 @@ private fun loadTrainTickets() {
                                 }
                             }
                             2 -> AnimatedVisibility(visible = currTag.value==2) {
-                                // do something
-                                ProductList(
+                                val deviceStyle = remember {
+                                    mutableStateOf(ConfigUtils.checkSwitchConfig(this@MainActivity,"product_view_style"))
+                                }
+                                ProductPages(
                                     context = this@MainActivity,
-                                    products = products,
-                                    maintenanceMap=maintenanceMap,
-                                    onAddClick = {
-                                        val intent = Intent(this@MainActivity, AddProductActivity::class.java)
-                                        startActivity(intent)
-                                    }
-                                )
+                                    maintenanceMap =  maintenanceMap,
+                                    products =  products,
+                                    viewStyle = deviceStyle.value
+                                ) {
+                                    val intent = Intent(this@MainActivity, AddProductActivity::class.java)
+                                    startActivity(intent)
+
+                                }
+                                // do something
+
                             }
                             3 -> AnimatedVisibility(visible = currTag.value==3) {
                                 TrainTicketList(

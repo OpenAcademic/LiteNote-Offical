@@ -6,6 +6,7 @@
  */
 package  com.example.litenote
 
+import android.content.Intent
 import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.ComponentActivity
@@ -36,13 +37,49 @@ enum class ProductType(val typeName: String) {
     SMART_DEVICE("其他智能设备"),
     OTHER("其他设备")
 }
+fun string2TypeEnum(type: String): ProductType {
+    return when (type) {
+        "手机" -> ProductType.PHONE
+        "平板电脑" -> ProductType.TABLET
+        "笔记本电脑" -> ProductType.LAPTOP
+        "智能穿戴设备" -> ProductType.WEARABLE
+        "耳机" -> ProductType.HEADPHONE
+        "鼠标" -> ProductType.MOUSE
+        "其他智能设备" -> ProductType.SMART_DEVICE
+        else -> ProductType.OTHER
+    }
+}
+fun typeEnum2String(type: ProductType): String {
+    return when (type) {
+        ProductType.PHONE -> "手机"
+        ProductType.TABLET -> "平板电脑"
+        ProductType.LAPTOP -> "笔记本电脑"
+        ProductType.WEARABLE -> "智能穿戴设备"
+        ProductType.HEADPHONE -> "耳机"
+        ProductType.MOUSE -> "鼠标"
+        ProductType.SMART_DEVICE -> "其他智能设备"
+        ProductType.OTHER -> "其他设备"
+    }
+}
 class AddProductActivity : ComponentActivity() {
+    private val showDeleteDialog = mutableStateOf(false)
+    
     @OptIn(ExperimentalMaterial3Api::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
+        
+        val editMode = intent.getBooleanExtra("editMode", false)
+        val productId = intent.getIntExtra("productId", -1)
+        
         setContent {
             LiteNoteTheme {
+                val name = remember { mutableStateOf(if (editMode) intent.getStringExtra("name") ?: "" else "") }
+                val totalCost = remember { mutableStateOf(if (editMode) intent.getDoubleExtra("totalCost", 0.0).toString() else "") }
+                val estimatedCost = remember { mutableStateOf(if (editMode) intent.getDoubleExtra("estimatedCost", 0.0).toString() else "") }
+                val type = remember { mutableStateOf(if (editMode) intent.getStringExtra("type") ?: "" else "") }
+                val buyTime = remember { mutableStateOf(if (editMode) intent.getLongExtra("buyTime", System.currentTimeMillis()) else System.currentTimeMillis()) }
+
+                enableEdgeToEdge()
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
                     Column(
                         modifier = Modifier
@@ -53,12 +90,6 @@ class AddProductActivity : ComponentActivity() {
                             )
                             .padding(20.dp)
                     ) {
-                        val name = remember { mutableStateOf("") }
-                        val totalCost = remember { mutableStateOf("") }
-                        val estimatedCost = remember { mutableStateOf("") }
-                        val type = remember { mutableStateOf("") }
-                        val buyTime = remember { mutableStateOf(System.currentTimeMillis()) }
-                        val showDatePicker = remember { mutableStateOf(false) }
                         val fontColor = getDarkModeTextColor(this@AddProductActivity)
                         var expanded = remember { mutableStateOf(false) }
 
@@ -141,7 +172,7 @@ class AddProductActivity : ComponentActivity() {
                         }
 
                         Spacer(modifier = Modifier.height(16.dp))
-
+                        val showDatePicker = remember { mutableStateOf(false) }
                         OutlinedButton(
                             onClick = { showDatePicker.value = true },
                             modifier = Modifier.fillMaxWidth()
@@ -182,9 +213,7 @@ class AddProductActivity : ComponentActivity() {
                         Spacer(modifier = Modifier.height(32.dp))
 
                         Button(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(vertical = 16.dp),
+                            modifier = Modifier.fillMaxWidth(),
                             onClick = {
                                 if (name.value.isEmpty() || totalCost.value.isEmpty() || 
                                     estimatedCost.value.isEmpty() || type.value.isEmpty()) {
@@ -200,21 +229,82 @@ class AddProductActivity : ComponentActivity() {
                                             type = type.value,
                                             buyTime = buyTime.value
                                         )
-                                        CodeDatabase.getDatabase(this@AddProductActivity)
-                                            .productDao()
-                                            .insert(product)
                                         
-                                        runOnUiThread {
-                                            Toast.makeText(this@AddProductActivity,
-                                                "保存成功",
-                                                Toast.LENGTH_SHORT).show()
-                                            finish()
+                                        val db = CodeDatabase.getDatabase(this@AddProductActivity)
+                                        if (editMode) {
+                                            product.id = productId
+                                            db.productDao().update(product)
+                                            runOnUiThread {
+                                                Toast.makeText(this@AddProductActivity,
+                                                    "更新成功",
+                                                    Toast.LENGTH_SHORT).show()
+                                                finish()
+                                            }
+                                        } else {
+                                            db.productDao().insert(product)
+                                            runOnUiThread {
+                                                Toast.makeText(this@AddProductActivity,
+                                                    "添加成功",
+                                                    Toast.LENGTH_SHORT).show()
+                                                finish()
+                                            }
                                         }
                                     }
                                 }
                             }
                         ) {
-                            Text("保存")
+                            Text(if (editMode) "更新" else "保存")
+                        }
+
+                        if (editMode) {
+                            Spacer(modifier = Modifier.height(16.dp))
+                            Button(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = 16.dp),
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = MaterialTheme.colorScheme.error
+                                ),
+                                onClick = { showDeleteDialog.value = true }
+                            ) {
+                                Text("删除产品")
+                            }
+                        }
+
+                        if (showDeleteDialog.value) {
+                            AlertDialog(
+                                onDismissRequest = { showDeleteDialog.value = false },
+                                title = { Text("确认删除") },
+                                text = { Text("确定要删除该产品吗？删除后将无法恢复。") },
+                                confirmButton = {
+                                    TextButton(
+                                        onClick = {
+                                            showDeleteDialog.value = false
+                                            thread {
+                                                val db = CodeDatabase.getDatabase(this@AddProductActivity)
+                                                db.productDao().deleteById(productId)
+                                                runOnUiThread {
+                                                    Toast.makeText(
+                                                        this@AddProductActivity,
+                                                        "删除成功",
+                                                        Toast.LENGTH_SHORT
+                                                    ).show()
+                                                    finish()
+                                                }
+                                            }
+                                        }
+                                    ) {
+                                        Text("确定")
+                                    }
+                                },
+                                dismissButton = {
+                                    TextButton(
+                                        onClick = { showDeleteDialog.value = false }
+                                    ) {
+                                        Text("取消")
+                                    }
+                                }
+                            )
                         }
                     }
                 }

@@ -12,7 +12,7 @@ import androidx.room.PrimaryKey
 @Entity(tableName = "train_ticket")
 data class TrainTicket(
     @PrimaryKey(autoGenerate = true)
-    val id: Int = 0,
+    var id: Int = 0,
     val departure: String,          // 出发地
     val departureTime: Long,        // 出发时间戳
     val arrival: String,           // 到达地

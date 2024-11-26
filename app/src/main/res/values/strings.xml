@@ -136,4 +136,7 @@
     <string name="tickets">火车票收藏</string>
     <string name="title_activity_add_train_ticket">AddTrainTicketActivity</string>
     <string name="train_tickets">火车票</string>
+    <string name="product_view_style">产品管理展示风格</string>
+    <string name="product_view_style_list">列表视图</string>
+    <string name="product_view_style_grid">卡片视图</string>
 </resources>

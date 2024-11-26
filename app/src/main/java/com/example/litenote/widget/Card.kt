@@ -1,4 +1,3 @@
-
 /*
  * Copyright (C) 2024 The LiteNote Project
  * @author OpenAcademic
@@ -9,16 +8,23 @@ package  com.example.litenote.widget
 
 import android.content.Context
 import android.content.Intent
+import android.graphics.Canvas
+import android.graphics.Path
 import android.util.Log
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -26,6 +32,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -34,9 +42,13 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowForward
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Divider
 import androidx.compose.material3.FloatingActionButton
@@ -54,15 +66,22 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.BlurredEdgeTreatment
+import androidx.compose.ui.draw.blur
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.VectorProperty
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.layout.positionInRoot
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.litenote.AddMaintenanceActivity
+import com.example.litenote.AddProductActivity
+import com.example.litenote.ProductType
 import com.example.litenote.R
 import com.example.litenote.dbutils.CodeDBUtils
 import com.example.litenote.entity.Code
@@ -70,7 +89,9 @@ import com.example.litenote.entity.Product
 import com.example.litenote.entity.ProductMaintenance
 import com.example.litenote.entity.TicketColor
 import com.example.litenote.entity.TrainTicket
+import com.example.litenote.string2TypeEnum
 import com.example.litenote.sub.LeftButton
+import com.example.litenote.typeEnum2String
 import com.example.litenote.utils.getDarkModeBackgroundColor
 import com.example.litenote.utils.getDarkModeTextColor
 import com.example.litenote.utils.getProductTypeIcon
@@ -79,8 +100,10 @@ import com.example.litenote.utils.daysToYearDays
 @Composable
 fun TrainTicketCard(
     ticket: TrainTicket,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onEditTicket: () -> Unit = {}
 ) {
+    var expanded = remember { mutableStateOf(false) }
     val backgroundColor = if (ticket.ticketColor == TicketColor.RED) Color.Red.copy(alpha = 0.1f) else Color.Blue.copy(alpha = 0.1f)
     val fontColor = if (ticket.ticketColor == TicketColor.RED) Color.Red else Color.Blue
 
@@ -90,6 +113,9 @@ fun TrainTicketCard(
             .padding(vertical = 8.dp)
             .background(color = backgroundColor, shape = MaterialTheme.shapes.medium)
             .padding(16.dp)
+            .clickable {
+                expanded.value = !expanded.value
+            }
     ) {
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -108,7 +134,9 @@ fun TrainTicketCard(
 
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
-                modifier = Modifier.weight(1f).padding(horizontal = 12.dp)
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(horizontal = 12.dp)
             ) {
                 Text(
                     text = ticket.trainNumber,
@@ -126,7 +154,9 @@ fun TrainTicketCard(
                         imageVector = Icons.Default.ArrowForward,
                         contentDescription = "到",
                         tint = fontColor.copy(alpha = 0.6f),
-                        modifier = Modifier.padding(horizontal = 4.dp).width(80.dp)
+                        modifier = Modifier
+                            .padding(horizontal = 4.dp)
+                            .width(80.dp)
                     )
 
                 }
@@ -168,6 +198,22 @@ fun TrainTicketCard(
             fontSize = 14.sp,
             color = fontColor.copy(alpha = 0.6f)
         )
+
+        if (expanded.value) {
+            Divider(modifier = Modifier.padding(vertical = 8.dp))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.End
+            ) {
+                IconButton(onClick = onEditTicket) {
+                    Icon(
+                        imageVector = Icons.Default.Edit,
+                        contentDescription = "编辑",
+                        tint = fontColor
+                    )
+                }
+            }
+        }
     }
 }
 @Composable
@@ -217,7 +263,8 @@ fun RotationCard(
             ) {
                 Column(
                     modifier = Modifier
-                        .fillMaxHeight(0.8f).padding(start = 8.dp, end = 8.dp, bottom = 8.dp)
+                        .fillMaxHeight(0.8f)
+                        .padding(start = 8.dp, end = 8.dp, bottom = 8.dp)
                         .graphicsLayer {
                             alpha = animateFront.value
                         },
@@ -257,7 +304,9 @@ fun RotationCard(
 
 
                 LeftButton(
-                    modifier= Modifier.fillMaxHeight().padding(start = 8.dp, end = 8.dp, bottom = 8.dp),
+                    modifier= Modifier
+                        .fillMaxHeight()
+                        .padding(start = 8.dp, end = 8.dp, bottom = 8.dp),
                     context = context, text = null, icon = Icons.Default.ArrowForward) {
                     rotated.value = !rotated.value
                 }
@@ -358,6 +407,7 @@ fun RotationCard(
 
 @Composable
 fun ProductCard(
+    context: Context,
     product: Product,
     fontColor: Color,
     backgroundColor: Color,
@@ -379,7 +429,7 @@ fun ProductCard(
         mutableStateOf(product.totalCost + maintenances.sumOf { it.cost })
     }
     
-    // 计算进度
+    // 计算进
     val passedDays = remember(product.buyTime) {
         mutableStateOf(((System.currentTimeMillis() - product.buyTime) / (1000 * 60 * 60 * 24)).toInt())
     }
@@ -500,17 +550,45 @@ fun ProductCard(
         
         if (expanded.value) {
             Divider(modifier = Modifier.padding(vertical = 8.dp))
-            Text(
-                text = "记录",
-                fontSize = 16.sp,
-                fontWeight = FontWeight.Bold,
-                color = fontColor
-            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "记录",
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = fontColor
+                )
+                IconButton(
+                    onClick = {
+                        context.startActivity(
+                            Intent(context, AddProductActivity::class.java).apply {
+                                putExtra("editMode", true)
+                                putExtra("productId", product.id)
+                                putExtra("name", product.name)
+                                putExtra("totalCost", product.totalCost)
+                                putExtra("estimatedCost", product.estimatedCost)
+                                putExtra("type", product.type)
+                                putExtra("buyTime", product.buyTime)
+                            }
+                        )
+                    }
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Edit,
+                        contentDescription = "编辑",
+                        tint = fontColor
+                    )
+                }
+            }
             
             MaintenanceTimeline(
                 maintenances = maintenances,
                 initialCost = initialCost.value,
                 buyTime = product.buyTime,
+                buyChengben = product.estimatedCost,
                 fontColor = fontColor
             )
             
@@ -531,8 +609,35 @@ private fun MaintenanceTimeline(
     maintenances: List<ProductMaintenance>,
     initialCost: Double,
     buyTime: Long,
+    buyChengben: Double,
     fontColor: Color
 ) {
+    // 按时间排序维护记录
+    val sortedMaintenances = remember(maintenances) {
+        maintenances.sortedBy { it.maintainTime }
+    }
+    
+    // 计算每个维护点的剩余成本
+    var lastTime = buyTime
+    var sumCost = maintenances.sumOf { it.cost }
+    var remainingCost = initialCost  
+    var ramains = remember {
+        mutableStateListOf<Double>()
+    }
+    ramains.add(remainingCost)
+    sortedMaintenances.forEach { maintenance ->
+        // 计算与上次维护的时间间隔(天)
+        val timeDiff = (maintenance.maintainTime - lastTime) / (1000.0 * 60 * 60 * 24)
+        // 计算日均成本
+        val dailyCost = buyChengben
+        // 计算此次维护后的剩余成本
+        remainingCost = remainingCost - (timeDiff * dailyCost) + maintenance.cost
+        lastTime = maintenance.maintainTime
+        ramains.add(remainingCost)
+    }
+
+
+
     Column(
         modifier = Modifier.padding(start = 16.dp, top = 8.dp)
     ) {
@@ -541,19 +646,23 @@ private fun MaintenanceTimeline(
             cost = initialCost,
             time = buyTime,
             isInitial = true,
+            remainingCost = ramains[0],
             fontColor = fontColor
         )
         
         // 维护记录
-        maintenances.forEach { maintenance ->
+
+        sortedMaintenances.forEachIndexed {  index,maintenance ->
             TimelineItem(
                 cost = maintenance.cost,
                 time = maintenance.maintainTime,
                 isInitial = false,
                 name = maintenance.name,
+                remainingCost = ramains[index+1],
                 fontColor = fontColor
             )
         }
+
     }
 }
 
@@ -562,67 +671,44 @@ private fun TimelineItem(
     cost: Double,
     time: Long,
     isInitial: Boolean,
-    name: String = "",
+    name: String? = null,
+    remainingCost: Double,
     fontColor: Color
 ) {
     Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 8.dp),
-        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
-        // 时间轴线和圆点
-        Box(
-            modifier = Modifier
-                .width(24.dp)
-                .height(40.dp),
-            contentAlignment = Alignment.Center
-        ) {
-            Divider(
-                modifier = Modifier
-                    .fillMaxHeight()
-                    .width(2.dp),
-                color = fontColor.copy(alpha = 0.2f)
+        Column {
+            Text(
+                text = if (isInitial) "初始购买" else name ?: "",
+                color = fontColor,
+                fontSize = 14.sp
             )
-            Box(
-                modifier = Modifier
-                    .size(12.dp)
-                    .background(
-                        color = if (isInitial) MaterialTheme.colorScheme.primary 
-                        else fontColor.copy(alpha = 0.6f),
-                        shape = CircleShape
-                    )
+            Text(
+                text = timeStempToTime(time, 9),
+                color = fontColor.copy(alpha = 0.6f),
+                fontSize = 12.sp
             )
         }
         
-        // 中间内容
         Column(
-            modifier = Modifier
-                .padding(start = 16.dp)
-                .weight(1f)
+            horizontalAlignment = Alignment.End
         ) {
             Text(
-                text = if (isInitial) "初始购买" else name,
-                fontSize = 16.sp,
-                fontWeight = FontWeight.Medium,
-                color = fontColor
+                text = "¥%.2f".format(cost),
+                color = fontColor,
+                fontSize = 14.sp
             )
             Text(
-                text = "¥$cost",
-                fontSize = 14.sp,
-                color = fontColor
+                text = "剩余: ¥%.2f".format(remainingCost),
+                color = fontColor.copy(alpha = 0.6f),
+                fontSize = 12.sp
             )
         }
-
-        // 右侧时间
-        Text(
-            text = timeStempToTime(time, 1),
-            fontSize = 12.sp,
-            color = fontColor.copy(alpha = 0.6f),
-            modifier = Modifier.padding(start = 8.dp)
-        )
     }
+    
+    Spacer(modifier = Modifier.height(8.dp))
 }
 
 @Composable
@@ -646,6 +732,7 @@ fun ProductList(
                 ) {
                     products.forEach { product ->
                         ProductCard(
+                            context = context,
                             product = product,
                             fontColor = getDarkModeTextColor(context),
                             backgroundColor = getDarkModeBackgroundColor(context, 1),
@@ -663,5 +750,268 @@ fun ProductList(
         }
         
 
+    }
+}
+
+@Composable
+fun ProductPages(
+    context: Context,
+    maintenanceMap: Map<Int, List<ProductMaintenance>>,
+    products: List<Product>,
+    viewStyle: Boolean,
+    onProductClick: (Product) -> Unit
+) {
+    val groupedProducts = products.groupBy { it.type }
+    val selectedType = remember { mutableStateOf<String?>(null) }
+    if (viewStyle) {
+        LazyVerticalGrid(
+            columns = GridCells.Fixed(1),
+            contentPadding = PaddingValues(16.dp),
+            horizontalArrangement = Arrangement.spacedBy(16.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            groupedProducts.keys.forEach { type ->
+                item {
+                    ProductTypeSection(
+                        context = context,
+                        maintenanceMap = maintenanceMap,
+                        type = type,
+                        products = groupedProducts[type] ?: emptyList(),
+                        onProductClick = onProductClick
+                    )
+                }
+            }
+        }
+    } else {
+        Box(modifier = Modifier.fillMaxSize()) {
+         
+
+            // 原有的网格布局
+            LazyVerticalGrid(
+                columns = GridCells.Fixed(2),
+                contentPadding = PaddingValues(16.dp),
+                horizontalArrangement = Arrangement.spacedBy(16.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                groupedProducts.keys.forEach { type ->
+                    item {
+                        ProductTypeCard(
+                            type = string2TypeEnum(type),
+                            productsCount = groupedProducts[type]?.size ?: 0,
+                            onClick = { selectedType.value = if (selectedType.value == type) null else type }
+                        )
+                    }
+                }
+            }
+
+            // 模糊背景层
+    AnimatedVisibility(
+        visible = selectedType.value != null,
+        enter = fadeIn(),
+        exit = fadeOut()
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color.Black.copy(alpha = 0.5f))
+                .blur(
+                    radius = 70.dp,
+                    edgeTreatment = BlurredEdgeTreatment. Unbounded
+                )
+                .clickable { selectedType.value = null }
+        )
+    }
+
+
+            // 弹出窗口
+            AnimatedVisibility(
+                visible = selectedType.value != null,
+                modifier = Modifier
+                    .fillMaxHeight(0.7f)
+                    .align(Alignment.BottomCenter)
+            ) {
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .fillMaxHeight(0.6f)
+                        .padding(16.dp),
+                    elevation = CardDefaults.cardElevation(8.dp)
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(16.dp)
+                    ) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = selectedType.value ?: "",
+                                style = MaterialTheme.typography.titleLarge
+                            )
+                            IconButton(onClick = { selectedType.value = null }) {
+                                Icon(Icons.Default.KeyboardArrowDown, "收起")
+                            }
+                        }
+
+                        Divider(modifier = Modifier.padding(vertical = 8.dp))
+
+                        Column(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .verticalScroll(rememberScrollState())
+                        ) {
+                            selectedType.value?.let { type ->
+                                groupedProducts[type]?.forEach { product ->
+                                    ProductCard(
+                                        context = context,
+                                        product = product,
+                                        fontColor = getDarkModeTextColor(context),
+                                        backgroundColor = getDarkModeBackgroundColor(context, 1),
+                                        maintenances = maintenanceMap[product.id] ?: emptyList(),
+                                        onAddMaintenance = {
+                                            context.startActivity(
+                                                Intent(context, AddMaintenanceActivity::class.java)
+                                                    .putExtra("productId", product.id)
+                                            )
+                                        }
+                                    )
+                                    Spacer(modifier = Modifier.height(8.dp))
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
+
+}
+
+
+
+@Composable
+private fun ProductTypeSection(
+    context: Context,
+    maintenanceMap: Map<Int, List<ProductMaintenance>>,
+    type: String,
+    products: List<Product>,
+    onProductClick: (Product) -> Unit
+) {
+    var expanded = remember { mutableStateOf(false) }
+    
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(
+                getDarkModeBackgroundColor(LocalContext.current, 1),
+                MaterialTheme.shapes.medium
+            )
+            .padding(16.dp)
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    painter = getProductTypeIcon(type),
+                    contentDescription = type,
+                    modifier = Modifier.size(24.dp)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = type,
+                    style = MaterialTheme.typography.titleMedium
+                )
+                Text(
+                    text = "(${products.size})",
+                    style = MaterialTheme.typography.bodyMedium,
+                    modifier = Modifier.padding(start = 4.dp)
+                )
+            }
+            IconButton(onClick = { expanded.value = !expanded.value }) {
+                Icon(
+                    imageVector = if (expanded.value) Icons.Default.KeyboardArrowUp
+                    else Icons.Default.KeyboardArrowDown,
+                    contentDescription = if (expanded.value) "收起" else "展开"
+                )
+            }
+        }
+        
+        AnimatedVisibility(visible = expanded.value) {
+            Column {
+                products.forEach { product ->
+                    ProductCard(
+                        context = context,
+                        product = product,
+                        fontColor = getDarkModeTextColor(context),
+                        backgroundColor = getDarkModeBackgroundColor(context, 1),
+                        maintenances = maintenanceMap[product.id] ?: emptyList(),
+                        onAddMaintenance = {
+                            context.startActivity(
+                                Intent(context, AddMaintenanceActivity::class.java)
+                                    .putExtra("productId", product.id)
+                            )
+                        }
+                    )
+                }
+            }
+        }
+    }
+}
+
+
+@Composable
+private fun ProductTypeCard(
+    type: ProductType,
+    productsCount: Int,
+    onClick: (Pair<Float, Float>) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    var cardPosition = remember { mutableStateOf<Pair<Float, Float>?>(null) }
+    
+    Card(
+        modifier = modifier
+            .aspectRatio(1f)
+            .onGloballyPositioned { coordinates ->
+                cardPosition.value = Pair(
+                    coordinates.positionInRoot().x,
+                    coordinates.positionInRoot().y
+                )
+            }
+            .clickable {
+                cardPosition.value?.let { onClick(it) }
+            },
+        elevation = CardDefaults.cardElevation(4.dp)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            Icon(
+                painter = getProductTypeIcon(type.typeName),
+                contentDescription = type.typeName,
+                modifier = Modifier.size(48.dp)
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = type.typeName,
+                style = MaterialTheme.typography.titleMedium
+            )
+            Text(
+                text = "($productsCount)",
+                style = MaterialTheme.typography.bodyMedium
+            )
+        }
     }
 }
