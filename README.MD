@@ -32,12 +32,26 @@
 
 ## 项目结构
 
-主要代码结构:
+主要目录说明:
 
-kotlin:app/src/main/java/com/example/litenote
-desktopwidget/ # 桌面小部件相关代码
-widget/ # 应用内组件
-utils/ # 工具类
+- `assets/`: 存放静态资源文件,如协议文档等
+- `base/`: 数据库基础类
+- `dbutils/`: 数据库操作工具类
+- `entity/`: 数据实体类定义
+- `service/`: 后台服务相关代码
+- `sub/`: 子页面活动
+- `utils/`: 通用工具类
+- `widget/`: 自定义UI组件
+- `desktopwidget/`: 桌面小部件实现
+
+核心文件:
+
+- `MainActivity.kt`: 应用主入口
+- `HomePages.kt`: 首页UI实现 
+- `Settings.kt`: 设置页面实现
+- `Express.kt`: 快递相关功能组件
+- `DesktopCodeMWidget.kt`: 桌面小部件实现
+
 
 ## 许可证
 
