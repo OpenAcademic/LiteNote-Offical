@@ -74,6 +74,9 @@ fun SettingsPage(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier
             .fillMaxSize()
+            .verticalScroll(
+                rememberScrollState()
+            )
             .padding(10.dp)
     ) {
         Column(
@@ -88,9 +91,7 @@ fun SettingsPage(
                     shape = MaterialTheme.shapes.large
                 )
                 .padding(10.dp)
-                .verticalScroll(
-                    rememberScrollState()
-                )
+
         ) {
             // 替换原来的Logo为应用名称和版本号
             Column(
@@ -205,6 +206,122 @@ fun SettingsPage(
             )
 
         }
+    }
+
+}
+
+@OptIn(ExperimentalLayoutApi::class, ExperimentalMaterial3Api::class)
+@Composable
+fun MoreActionPage(
+    context: Context,
+    settingItems: List<SettingItems>,
+    resources: android.content.res.Resources,
+    show : Boolean = true
+){
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = Modifier
+            .fillMaxSize()
+            .verticalScroll(
+                rememberScrollState()
+            )
+            .padding(10.dp)
+    ) {
+        Column(
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally,
+            modifier = Modifier
+                .padding(10.dp)
+                .fillMaxHeight(0.8f)
+                .fillMaxWidth()
+                .padding(10.dp)
+
+        ) {
+
+            settingItems.forEachIndexed { index, settingItem ->
+                Column(
+                    verticalArrangement = Arrangement.Center,
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(5.dp)
+                        .background(
+                            getDarkModeBackgroundColor(context = context, level = 1),
+                            shape = MaterialTheme.shapes.large
+                        )
+                        .padding(5.dp)
+                ) {
+                    when (settingItem.type){
+                        0 -> TextButton(
+                            onClick = {
+                                settingItem.func()
+                            },
+                            modifier = Modifier.fillMaxWidth(),
+                            colors = ButtonDefaults.outlinedButtonColors(
+                                contentColor = getDarkModeTextColor(context)
+                            )
+                        ) {
+                            Text(text = resources.getString(
+                                settingItem.name
+                            ),modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center)
+                        }
+                        1 -> TextButton(
+                            onClick = {
+                                settingItem.func()
+                            },
+                            modifier = Modifier.fillMaxWidth(),
+                            colors = ButtonDefaults.outlinedButtonColors(
+                                contentColor = getDarkModeTextColor(context)
+                            )
+
+                        ) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                Text(text = resources.getString(
+                                    settingItem.name
+                                ),modifier = Modifier.padding(start = 10.dp), textAlign = TextAlign.Center)
+                                Text(text =  "${settingItem.num}个",modifier = Modifier.padding(end = 10.dp), textAlign = TextAlign.Center)
+                            }
+                        }
+                        else -> TextButton(
+                            onClick = {
+                                settingItem.func()
+                            },
+                            modifier = Modifier.fillMaxWidth(),
+                            colors = ButtonDefaults.outlinedButtonColors(
+                                contentColor = getDarkModeTextColor(context)
+                            )
+                        ) {
+                            Text(text = resources.getString(
+                                settingItem.name
+                            ),modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center)
+                        }
+
+
+                    }
+                }
+
+                if (index!=settingItems.size-1){
+                    Spacer(modifier = Modifier
+                        .fillMaxWidth()
+                        .height(1.dp)
+                        .background(
+                            color = getDarkModeBackgroundColor(context, 2)
+                        ))
+                }
+
+
+            }
+
+
+
+
+        }
+
+
     }
 
 }

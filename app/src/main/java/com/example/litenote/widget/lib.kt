@@ -5,6 +5,9 @@
  * 
  */
 package  com.example.litenote.widget
+import android.content.Context
+import androidx.activity.SystemBarStyle
+import androidx.activity.enableEdgeToEdge
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -28,6 +31,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.delay
+
+
 
 @Composable
 fun MarqueeText(

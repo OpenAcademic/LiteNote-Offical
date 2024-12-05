@@ -44,6 +44,16 @@ data class TrainTimeData(
     val data: List<TrainStationInfo>
 )
 
+data class TrainEmuInfo(
+    val date: String,
+    val emu_no: String,
+    val train_no: String
+)
+
+data class TrainEmuResponse(
+    val data: List<TrainEmuInfo>
+)
+
 object Train12306Api {
     private const val BASE_URL = "https://search.12306.cn/search/v1/h5/search"
     private val client = OkHttpClient.Builder()
@@ -103,6 +113,35 @@ object Train12306Api {
             }
             
             return trainResponse.data.data
+        } catch (e: Exception) {
+            e.printStackTrace()
+            return null
+        }
+    }
+
+    fun queryTrainEmu(trainNo: String, targetDate: String): String? {
+        try {
+            val upperTrainNo = trainNo.uppercase()
+            val url = "https://api.rail.re/train/$upperTrainNo"
+            
+            val request = Request.Builder()
+                .url(url)
+                .addHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36")
+                .get()
+                .build()
+
+            val response = client.newCall(request).execute()
+            if (!response.isSuccessful) {
+                return null
+            }
+            
+            val jsonStr = response.body?.string() ?: return null
+            val gson = Gson()
+            val trainEmuList = gson.fromJson(jsonStr, Array<TrainEmuInfo>::class.java).toList()
+            
+            // 查找目标日期的车次信息
+            return trainEmuList.find { it.date.startsWith(targetDate) }?.emu_no
+            
         } catch (e: Exception) {
             e.printStackTrace()
             return null

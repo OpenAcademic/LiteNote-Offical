@@ -16,8 +16,8 @@ android {
         minSdk= 29
         maxSdk =35
         targetSdk =35
-        versionCode = 3000031
-        versionName = "2.3.1"
+        versionCode = 3000040
+        versionName = "2.4.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -75,7 +75,6 @@ android {
         jvmTarget = "1.8"
 
     }
-
     buildFeatures {
         compose = true
         viewBinding = true
@@ -181,6 +180,7 @@ dependencies {
     implementation("com.google.accompanist:accompanist-systemuicontroller:0.16.0")
 
 
+    implementation("com.github.jeziellago:compose-markdown:0.3.6")
 
     implementation("de.psdev.licensesdialog:licensesdialog:2.1.0")
 }

@@ -25,6 +25,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -33,15 +34,19 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowForward
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Divider
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.SmallFloatingActionButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -76,6 +81,16 @@ import com.example.litenote.utils.getDarkModeTextColor
 import com.example.litenote.utils.getProductTypeIcon
 import com.example.litenote.utils.timeStempToTime
 
+enum class GroupBy {
+    NONE,           // 无分组
+    DEPARTURE,      // 始发地
+    ARRIVAL,        // 终到地
+    TRAIN_TYPE,     // 车型
+    TRAVEL_DATE,    // 乘车日期
+    TRAIN_NUMBER,    // 车次
+    PASSENGER       // 乘客
+}
+
 @Composable
 fun TrainTicketList(
     context: Context,
@@ -83,26 +98,100 @@ fun TrainTicketList(
     currentPage: Int,
     totalCount: Int,
     onPageChange: (Int) -> Unit,
-    onAddClick: () -> Unit
+    onAddClick: () -> Unit,
+    isLoading: Boolean = false
 ) {
+    val showGroupDialog = remember { mutableStateOf(false) }
+    val currentGroupBy = remember { mutableStateOf(GroupBy.NONE) }
+    val selectedGroup = remember { mutableStateOf<String?>(null) }
+
+    // 对车票进行分组
+    var groupedTickets = run {
+        val q = if (currentGroupBy.value == GroupBy.NONE) {
+            null
+        } else {
+            tickets.groupBy { ticket ->
+                when (currentGroupBy.value) {
+                    GroupBy.DEPARTURE -> ticket.departure
+                    GroupBy.ARRIVAL -> ticket.arrival
+                    GroupBy.TRAIN_TYPE -> ticket.trainType
+                    GroupBy.TRAVEL_DATE -> timeStempToTime(ticket.travelDate, 1)
+                    GroupBy.TRAIN_NUMBER -> ticket.trainNumber
+                    GroupBy.PASSENGER -> ticket.passenger
+                    else -> null
+                }
+            }
+        }
+        mutableStateOf(q)
+    }
+    
     Box(modifier = Modifier.fillMaxSize()) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(10.dp)
+                .verticalScroll(
+                    rememberScrollState()
+                )
         ) {
-            if(tickets.isEmpty()) {
-                EmptyView(fontColor = getDarkModeTextColor(context))
-            } else {
-                Column(
-                    modifier = Modifier.verticalScroll(rememberScrollState())
-                ) {
-                    tickets.forEach { ticket ->
-                        TrainTicketCard(
-                            ticket = ticket,
-                            onEditTicket = {
-                                context.startActivity(
-                                    Intent(context, AddTrainTicketActivity::class.java).apply {
+            // 分组选择按钮
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 8.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                FilterChip(
+                    selected = false,
+                    onClick = { showGroupDialog.value = true },
+                    label = {
+                        Text(
+                            text = when(currentGroupBy.value) {
+                                GroupBy.NONE -> "未分组"
+                                GroupBy.DEPARTURE -> "按始发地"
+                                GroupBy.ARRIVAL -> "按终到地"
+                                GroupBy.TRAIN_TYPE -> "按车型"
+                                GroupBy.TRAVEL_DATE -> "按乘车日期"
+                                GroupBy.TRAIN_NUMBER -> "按车次"
+                                GroupBy.PASSENGER -> "按乘客"
+                            },
+                            color = getDarkModeTextColor(context)
+                        )
+                    },
+                    leadingIcon = {
+                        Icon(
+                            imageVector = Icons.Default.KeyboardArrowDown,
+                            contentDescription = null,
+                            tint = getDarkModeTextColor(context)
+                        )
+                    }
+                )
+            }
+
+            if (groupedTickets.value == null) {
+                // 未分组
+                if (tickets.isEmpty()) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(200.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = "暂无车票",
+                            color = getDarkModeTextColor(context),
+                            fontSize = 16.sp
+                        )
+                    }
+                } else {
+                    // 显示未分组的车票
+                    Column {
+                        tickets.forEachIndexed { index, ticket ->
+                            TrainTicketCard(
+                                ticket = ticket,
+                                onEditTicket = {
+                                    val intent = Intent(context, AddTrainTicketActivity::class.java).apply {
                                         putExtra("editMode", true)
                                         putExtra("ticketId", ticket.id)
                                         putExtra("departure", ticket.departure)
@@ -110,43 +199,287 @@ fun TrainTicketList(
                                         putExtra("trainNumber", ticket.trainNumber)
                                         putExtra("trainType", ticket.trainType)
                                         putExtra("passenger", ticket.passenger)
+                                        putExtra("travelDate", ticket.travelDate)
                                         putExtra("departureTime", ticket.departureTime)
                                         putExtra("arrivalTime", ticket.arrivalTime)
                                         putExtra("ticketColor", ticket.ticketColor)
                                     }
-                                )
-                            }
-                        )
-                    }
-                    
-                    // 分页控制
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 16.dp),
-                        horizontalArrangement = Arrangement.Center,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        TextButton(
-                            onClick = {
-                                 onPageChange(currentPage + 1)
-                            },
-
-                        ) {
-                            Text(
-                                text = "加载更多",
-                                color = getDarkModeTextColor(context),
-                                fontSize = 16.sp
+                                    context.startActivity(intent)
+                                }
                             )
                         }
+                    }
+                }
 
+            }
+            else {
+                // 显示选中分组的车票
+                if (groupedTickets.value!!.isEmpty() ){
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(200.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = "暂无车票",
+                            color = getDarkModeTextColor(context),
+                            fontSize = 16.sp
+                        )
+                    }
+                }else{
+                    Column {
+                        groupedTickets.value!!.keys.forEach{ group ->
+                            val currentGroupTickets = remember {
+                                groupedTickets.value!![group] ?: emptyList()
+                            }
+                            val currentTicketIndex = remember { mutableStateOf(0) }
+                            val isOpen = remember {
+                                mutableStateOf(false)
+                            }
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clickable {
+                                        selectedGroup.value = group
+                                        currentTicketIndex.value = 0
+                                    }
+                                    .padding(16.dp),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+
+                                Text(
+                                    text = group ?: "未分组",
+                                    color = getDarkModeTextColor(context),
+                                    fontSize = 16.sp
+                                )
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                ) {
+                                    Text(
+                                        text = "${groupedTickets.value!![group]?.size ?: 0}张",
+                                        color = getDarkModeTextColor(context).copy(alpha = 0.6f),
+                                        fontSize = 14.sp
+                                    )
+                                    IconButton(
+                                        onClick = {
+                                            isOpen.value = !isOpen.value
+
+                                        }
+                                    ) {
+                                        Icon(
+                                            imageVector = if (isOpen.value) {
+                                                Icons.Default.KeyboardArrowUp
+                                            } else {
+                                                Icons.Default.KeyboardArrowDown
+                                            },
+                                            contentDescription = if (isOpen.value) {
+                                                "收起"
+                                            } else {
+                                                "展开"
+                                            },
+                                            tint = getDarkModeTextColor(context)
+                                        )
+                                    }
+                                }
+                            }
+                            Divider()
+                            // 显示选中分组的车票
+                            if (isOpen.value){
+                                Column(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalAlignment = Alignment.CenterHorizontally,
+                                    verticalArrangement =   Arrangement.Top
+                                ) {
+                                    // 车票示
+                                    Box(
+                                        modifier = Modifier
+                                            .padding(5.dp)
+                                    ) {
+                                        if (currentGroupTickets.isNotEmpty()) {
+                                            TrainTicketCard(
+                                                ticket = currentGroupTickets[currentTicketIndex.value],
+                                                onEditTicket = {
+                                                    val intent = Intent(context, AddTrainTicketActivity::class.java).apply {
+                                                        putExtra("editMode", true)
+                                                        putExtra("ticketId", currentGroupTickets[currentTicketIndex.value].id)
+                                                        putExtra("departure", currentGroupTickets[currentTicketIndex.value].departure)
+                                                        putExtra("arrival", currentGroupTickets[currentTicketIndex.value].arrival)
+                                                        putExtra("trainNumber", currentGroupTickets[currentTicketIndex.value].trainNumber)
+                                                        putExtra("trainType", currentGroupTickets[currentTicketIndex.value].trainType)
+                                                        putExtra("passenger", currentGroupTickets[currentTicketIndex.value].passenger)
+                                                        putExtra("travelDate", currentGroupTickets[currentTicketIndex.value].travelDate)
+                                                        putExtra("departureTime", currentGroupTickets[currentTicketIndex.value].departureTime)
+                                                        putExtra("arrivalTime", currentGroupTickets[currentTicketIndex.value].arrivalTime)
+                                                        putExtra("ticketColor", currentGroupTickets[currentTicketIndex.value].ticketColor)
+                                                    }
+                                                    context.startActivity(intent)
+                                                }
+                                            )
+                                        }
+                                    }
+
+                                    // 分页指示器和翻页按钮
+                                    Row(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(5.dp),
+                                        horizontalArrangement = Arrangement.SpaceBetween,
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        IconButton(
+                                            onClick = {
+                                                if (currentTicketIndex.value > 0) {
+                                                    currentTicketIndex.value--
+                                                }
+                                            },
+                                            enabled = currentTicketIndex.value > 0
+                                        ) {
+                                            Icon(
+                                                imageVector = Icons.Default.ArrowBack,
+                                                contentDescription = "上一张",
+                                                tint = getDarkModeTextColor(context)
+                                            )
+                                        }
+
+                                        // 分页指示点
+                                        Row(
+                                            horizontalArrangement = Arrangement.Center,
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
+                                            repeat(currentGroupTickets.size) { index ->
+                                                Box(
+                                                    modifier = Modifier
+                                                        .padding(4.dp)
+                                                        .size(8.dp)
+                                                        .background(
+                                                            color = if (index == currentTicketIndex.value) {
+                                                                MaterialTheme.colorScheme.primary
+                                                            } else {
+                                                                getDarkModeTextColor(context).copy(
+                                                                    alpha = 0.3f
+                                                                )
+                                                            },
+                                                            shape = CircleShape
+                                                        )
+                                                )
+                                            }
+                                        }
+
+                                        IconButton(
+                                            onClick = {
+                                                if (currentTicketIndex.value < currentGroupTickets.size - 1) {
+                                                    currentTicketIndex.value++
+                                                }
+                                            },
+                                            enabled = currentTicketIndex.value < currentGroupTickets.size - 1
+                                        ) {
+                                            Icon(
+                                                imageVector = Icons.Default.ArrowForward,
+                                                contentDescription = "下一张",
+                                                tint = getDarkModeTextColor(context)
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                }
+            }
+            
+            if (tickets.isNotEmpty()) {
+                Spacer(modifier = Modifier.height(16.dp))
+                OutlinedButton(
+                    onClick = { onPageChange(currentPage + 1) },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp)
+                ) {
+                    if (isLoading) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(24.dp),
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                    } else {
+                        Text("加载更多")
                     }
                 }
             }
-        }
-        
 
+        }
     }
+
+    // 分组方式选择对话框
+    if (showGroupDialog.value) {
+        AlertDialog(
+            onDismissRequest = { showGroupDialog.value = false },
+            title = { Text("选择分组方式") },
+            text = {
+                Column {
+                    GroupBy.values().forEach { groupBy ->
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable {
+                                    currentGroupBy.value = groupBy
+                                    selectedGroup.value = null
+                                    showGroupDialog.value = false
+                                    if (groupBy == GroupBy.NONE) {
+                                        groupedTickets.value = null
+                                    } else {
+                                        groupedTickets.value = tickets.groupBy { ticket ->
+                                            when (currentGroupBy.value) {
+                                                GroupBy.DEPARTURE -> ticket.departure
+                                                GroupBy.ARRIVAL -> ticket.arrival
+                                                GroupBy.TRAIN_TYPE -> ticket.trainType
+                                                GroupBy.TRAVEL_DATE -> timeStempToTime(
+                                                    ticket.travelDate,
+                                                    1
+                                                )
+
+                                                GroupBy.TRAIN_NUMBER -> ticket.trainNumber
+                                                GroupBy.PASSENGER -> ticket.passenger
+                                                else -> null
+                                            }
+                                        }
+                                    }
+
+                                }
+                                .padding(vertical = 12.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = when(groupBy) {
+                                    GroupBy.NONE -> "未分组"
+                                    GroupBy.DEPARTURE -> "按始发地"
+                                    GroupBy.ARRIVAL -> "按终到地"
+                                    GroupBy.TRAIN_TYPE -> "按车型"
+                                    GroupBy.TRAVEL_DATE -> "按乘车日期"
+                                    GroupBy.TRAIN_NUMBER -> "按车次"
+                                    GroupBy.PASSENGER -> "按乘客"
+                                },
+                                modifier = Modifier.weight(1f),
+                                fontSize = 16.sp
+                            )
+                            if (currentGroupBy.value == groupBy) {
+                                Icon(
+                                    imageVector = Icons.Default.Check,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.primary
+                                )
+                            }
+                        }
+                    }
+                }
+            },
+            confirmButton = {}
+        )
+    }
+
+    
 }
 
 

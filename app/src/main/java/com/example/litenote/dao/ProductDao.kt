@@ -20,7 +20,8 @@ import com.example.litenote.entity.Product
 interface ProductDao {
     @Insert
     fun insert(product: Product): Long
-
+    @Query("SELECT COUNT(*) FROM products")
+    fun getProductCount(): Int
     @Query("SELECT * FROM products ORDER BY createTime DESC")
     fun getAll(): List<Product>
 

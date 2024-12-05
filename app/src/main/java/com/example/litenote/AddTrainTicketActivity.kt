@@ -26,6 +26,8 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -33,6 +35,8 @@ import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.RadioButton
@@ -121,7 +125,9 @@ class AddTrainTicketActivity : ComponentActivity() {
                                     date = timeStempToTime(travelDate.value,1)
                                 )
                                 stationList.value = stations
-                                showStationPicker.value = true
+                                runOnUiThread {
+                                    Toast.makeText(this@AddTrainTicketActivity, "查询成功", Toast.LENGTH_SHORT).show()
+                                }
                             } ?: run {
                                 runOnUiThread {
                                     Toast.makeText(this@AddTrainTicketActivity, "未找到车次信息", Toast.LENGTH_SHORT).show()
@@ -143,62 +149,34 @@ class AddTrainTicketActivity : ComponentActivity() {
                 Text("乘车日期: ${timeStempToTime(travelDate.value,1)}")
             }
 
-            // 站点选择对话框
-            if (showStationPicker.value && stationList.value != null) {
-                AlertDialog(
-                    onDismissRequest = { showStationPicker.value = false },
-                    title = { Text("选择站点") },
-                    text = {
-                        Column {
-                            Text("出发站")
-                            stationList.value?.forEach { station ->
-                                TextButton(
-                                    onClick = {
-                                        departure.value = station.station_name
-                                        // 设置发车时间
-                                        val calendar = Calendar.getInstance()
-                                        calendar.timeInMillis = travelDate.value
-                                        val (hour, minute) = station.start_time.split(":").map { it.toInt() }
-                                        calendar.set(Calendar.HOUR_OF_DAY, hour)
-                                        calendar.set(Calendar.MINUTE, minute)
-                                        departureTime.value = calendar.timeInMillis
-                                    },
-                                ) {
-                                    Text(station.station_name)
-                                }
-                            }
-
-                            Divider()
-
-                            Text("到达站")
-                            stationList.value?.forEach { station ->
-                                TextButton(
-                                    onClick = {
-                                        arrival.value = station.station_name
-                                        // 设置到达时间
-                                        val calendar = Calendar.getInstance()
-                                        calendar.timeInMillis = travelDate.value
-                                        val (hour, minute) = station.arrive_time.split(":").map { it.toInt() }
-                                        calendar.set(Calendar.HOUR_OF_DAY, hour)
-                                        calendar.set(Calendar.MINUTE, minute)
-                                        if (station.arrive_day_diff == "1") {
-                                            calendar.add(Calendar.DAY_OF_MONTH, 1)
-                                        }
-                                        arrivalTime.value = calendar.timeInMillis
-                                    }
-                                ) {
-                                    Text(station.station_name)
-                                }
-                            }
-                        }
-                    },
+            if (showDatePicker.value) {
+                val datestate = rememberDatePickerState(
+                    initialSelectedDateMillis = Calendar.getInstance().timeInMillis
+                )
+                DatePickerDialog(
+                    onDismissRequest = { showDatePicker.value = false },
                     confirmButton = {
-                        TextButton(onClick = { showStationPicker.value = false }) {
+                        TextButton(onClick = {
+                            showDatePicker.value = false
+                            datestate.selectedDateMillis.let {
+                                travelDate.value = it ?: System.currentTimeMillis()
+                            }
+                        }) {
                             Text("确定")
                         }
-                    }
-                )
+                    },
+
+                ){
+                    DatePicker(
+                        state = datestate
+                    )
+                }
             }
+
+            
+
+
+            // 站点选择对话框
             if (stationList.value == null) {
                 // 手动输入出发站和到达站、选择出发时间和到达时间
                 var showDepartureDatePicker = remember { mutableStateOf(false) }
@@ -263,18 +241,25 @@ class AddTrainTicketActivity : ComponentActivity() {
                     )
                     DatePickerDialog(
                         onDismissRequest = {
+                            showDepartureDatePicker.value = false
                         },
                         confirmButton = {
-                            datestate.selectedDateMillis.let {
-                                val calendar = Calendar.getInstance()
-                                if (it != null) {
-                                    calendar.timeInMillis = it
+                            TextButton(onClick = {
+                                showDepartureDatePicker.value = false
+                                datestate.selectedDateMillis.let {
+                                    val calendar = Calendar.getInstance()
+                                    if (it != null) {
+                                        calendar.timeInMillis = it
+                                    }
+                                    val hour = timeState.hour
+                                    val minute = timeState.minute
+                                    calendar.set(Calendar.HOUR_OF_DAY, hour)
+                                    calendar.set(Calendar.MINUTE, minute)
+                                    departureTime.value = calendar.timeInMillis
                                 }
-                                val hour = timeState.hour
-                                val minute = timeState.minute
-                                calendar.set(Calendar.HOUR_OF_DAY, hour)
-                                calendar.set(Calendar.MINUTE, minute)
-                                departureTime.value = calendar.timeInMillis
+                            }) {
+                                Text("确定")
+
                             }
 
 
@@ -312,18 +297,26 @@ class AddTrainTicketActivity : ComponentActivity() {
                     )
                     DatePickerDialog(
                         onDismissRequest = {
+                            showArrivalDatePicker.value = false
                         },
                         confirmButton = {
-                            datestate.selectedDateMillis.let {
-                                val calendar = Calendar.getInstance()
-                                if (it != null) {
-                                    calendar.timeInMillis = it
+                            TextButton(onClick = {
+                                showArrivalDatePicker.value = false
+                                datestate.selectedDateMillis.let {
+                                    val calendar = Calendar.getInstance()
+                                    if (it != null) {
+                                        calendar.timeInMillis = it
+                                    }
+                                    val hour = timeState.hour
+                                    val minute = timeState.minute
+                                    calendar.set(Calendar.HOUR_OF_DAY, hour)
+                                    calendar.set(Calendar.MINUTE, minute)
+                                    arrivalTime.value = calendar.timeInMillis
                                 }
-                                val hour = timeState.hour
-                                val minute = timeState.minute
-                                calendar.set(Calendar.HOUR_OF_DAY, hour)
-                                calendar.set(Calendar.MINUTE, minute)
-                                arrivalTime.value = calendar.timeInMillis
+
+                            }) {
+                                Text("确定")
+
                             }
                         }
                     ){
@@ -346,33 +339,141 @@ class AddTrainTicketActivity : ComponentActivity() {
                         }
                     }
                 }
-            } else {
+            }
+            else {
                 // 显示已选择的始发终到站信息
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween
+                val showDepartureStationPicker = remember { mutableStateOf(false) }
+                val showArrivalStationPicker = remember { mutableStateOf(false) }
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        TextField(
+            value = departure.value,
+            onValueChange = { departure.value = it },
+            label = { Text("出发地") },
+            modifier = Modifier.weight(1f),
+            maxLines = 1,
+            readOnly = true,
+
+        )
+        Spacer(modifier = Modifier.width(8.dp))
+        OutlinedButton(
+            onClick = { showDepartureStationPicker.value = true },
+            modifier = Modifier.weight(1f)
+        ) {
+            Text("出发: ${timeStempToTime(departureTime.value, 9)}")
+        }
+    }
+
+    Spacer(modifier = Modifier.height(8.dp))
+    
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        TextField(
+            value = arrival.value,
+            onValueChange = { arrival.value = it },
+            label = { Text("到达地") },
+            modifier = Modifier.weight(1f),
+            maxLines = 1,
+            readOnly = true,
+
+        )
+        Spacer(modifier = Modifier.width(8.dp))
+        OutlinedButton(
+            onClick = { showArrivalStationPicker.value = true },
+            modifier = Modifier.weight(1f)
+        ) {
+            Text("到达: ${timeStempToTime(arrivalTime.value, 9)}")
+        }
+    }
+
+    // 出发站选择弹窗
+    if (showDepartureStationPicker.value) {
+        AlertDialog(
+            onDismissRequest = { showDepartureStationPicker.value = false },
+            title = { Text("选择出发站") },
+            text = {
+                Column(
+                    modifier = Modifier.verticalScroll(rememberScrollState())
                 ) {
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text(
-                            text = "出发站: ${departure.value}",
-                            color = getDarkModeTextColor(this@AddTrainTicketActivity)
-                        )
-                        Text(
-                            text = "时间: ${timeStempToTime(departureTime.value, 9)}",
-                            color = getDarkModeTextColor(this@AddTrainTicketActivity)
-                        )
-                    }
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text(
-                            text = "到达站: ${arrival.value}",
-                            color = getDarkModeTextColor(this@AddTrainTicketActivity)
-                        )
-                        Text(
-                            text = "时间: ${timeStempToTime(arrivalTime.value, 9)}",
-                            color = getDarkModeTextColor(this@AddTrainTicketActivity)
-                        )
+                    stationList.value?.forEach { station ->
+                        TextButton(
+                            onClick = {
+                                departure.value = station.station_name
+                                // 设置发车时间
+                                val calendar = Calendar.getInstance()
+                                calendar.timeInMillis = travelDate.value
+                                val (hour, minute) = station.start_time.split(":").map { it.toInt() }
+                                calendar.set(Calendar.HOUR_OF_DAY, hour)
+                                calendar.set(Calendar.MINUTE, minute)
+                                departureTime.value = calendar.timeInMillis
+                                showDepartureStationPicker.value = false
+                            },
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text(station.station_name)
+                        }
                     }
                 }
+            },
+            confirmButton = {
+                TextButton(onClick = { showDepartureStationPicker.value = false }) {
+                    Text("取消")
+                }
+            }
+        )
+    }
+
+    // 到达站选择弹窗
+    if (showArrivalStationPicker.value) {
+        AlertDialog(
+            onDismissRequest = { showArrivalStationPicker.value = false },
+            title = { Text("选择到达站") },
+            text = {
+                Column(
+                    modifier = Modifier.verticalScroll(rememberScrollState())
+                ) {
+                    stationList.value?.forEachIndexed { index, station ->
+                        var enabled = remember {
+                            mutableStateOf(stationList.value?.indexOfFirst { it.station_name == departure.value }.let {
+                                it != null && it >= 0 && index > it
+                            })
+                        }
+                        TextButton(
+                            // 在 始发站之前的 不允许选择
+                            enabled = enabled.value,
+                            onClick = {
+                                arrival.value = station.station_name
+                                // 设置到达时间
+                                val calendar = Calendar.getInstance()
+                                calendar.timeInMillis = travelDate.value
+                                val (hour, minute) = station.arrive_time.split(":").map { it.toInt() }
+                                calendar.set(Calendar.HOUR_OF_DAY, hour)
+                                calendar.set(Calendar.MINUTE, minute)
+                                if (station.arrive_day_diff == "1") {
+                                    calendar.add(Calendar.DAY_OF_MONTH, 1)
+                                }
+                                arrivalTime.value = calendar.timeInMillis
+                                showArrivalStationPicker.value = false
+                            },
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text(station.station_name)
+                        }
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = { showArrivalStationPicker.value = false }) {
+                    Text("取消")
+                }
+            }
+        )
+    }
+
             }
             // 车票颜色选择
             Row(
@@ -420,13 +521,62 @@ class AddTrainTicketActivity : ComponentActivity() {
                 maxLines = 1
             )
 
-            TextField(
-                value = trainType.value,
-                onValueChange = { trainType.value = it },
-                label = { Text("车型") },
+            Row(
                 modifier = Modifier.fillMaxWidth(),
-                maxLines = 1
-            )
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                TextField(
+                    value = trainType.value,
+                    onValueChange = { trainType.value = it },
+                    label = { Text("车型") },
+                    modifier = Modifier.weight(1f),
+                    maxLines = 1
+                )
+                if (stationList.value!=null){
+                    Spacer(modifier = Modifier.width(8.dp))
+                    OutlinedButton(
+                    onClick = {
+                        thread {
+
+                            val lastStation = stationList.value!!.last()
+                            // 计算到达日期
+                            val calendar = Calendar.getInstance()
+                            calendar.timeInMillis = travelDate.value
+                            // 加上跨天天数
+                            calendar.add(Calendar.DAY_OF_MONTH, lastStation.arrive_day_diff.toInt())
+                            // 设置具体到达时间
+                            val (hour, minute) = lastStation.arrive_time.split(":").map { it.toInt() }
+                            calendar.set(Calendar.HOUR_OF_DAY, hour)
+                            calendar.set(Calendar.MINUTE, minute)
+                            
+                            // 格式化日期为 yyyy-MM-dd
+                            val targetDate = timeStempToTime(calendar.timeInMillis, 9)
+                            val emuNo = Train12306Api.queryTrainEmu(trainNumber.value, targetDate)
+                            if (emuNo != null) {
+                                trainType.value = emuNo
+                                runOnUiThread {
+                                    Toast.makeText(
+                                        this@AddTrainTicketActivity,
+                                        "查询成功",
+                                        Toast.LENGTH_SHORT
+                                    ).show()
+                                }
+                            } else {
+                                runOnUiThread {
+                                    Toast.makeText(
+                                        this@AddTrainTicketActivity,
+                                        "未找到车型信息",
+                                        Toast.LENGTH_SHORT
+                                    ).show()
+                                }
+                            }
+                        }
+                    }
+                ) {
+                    Text("查询车型")
+                }
+                }
+            }
 
             TextField(
                 value = note.value,

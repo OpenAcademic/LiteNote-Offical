@@ -272,7 +272,11 @@ fun OverPage(
     ),
     allNums : List<Int> = listOf(1, 2, 3),
     resources: android.content.res.Resources,
-
+    // 添加新的统计数据参数
+    noteCount: Int = 0,
+    categoryCount: Int = 0, 
+    productCount: Int = 0,
+    ticketCount: Int = 0
     ){
 
     val lists = remember {
@@ -284,7 +288,9 @@ fun OverPage(
         modifier = Modifier
             .fillMaxSize()
             .padding(10.dp)
-            .padding(20.dp)
+            .padding(20.dp).verticalScroll(
+                rememberScrollState()
+            )
 
     ) {
         Row(
@@ -345,12 +351,119 @@ fun OverPage(
             }
 
         }
-        Spacer(modifier = Modifier.width(20.dp))
+        Spacer(modifier = Modifier.height(10.dp))
+        Row(
+        modifier = Modifier
+            .fillMaxWidth().padding(top = 10.dp)
+            .height(140.dp)
+            .background(subBackgroundColor, shape = MaterialTheme.shapes.medium)
+            .padding(10.dp),
+        horizontalArrangement = Arrangement.SpaceAround,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        // 笔记统计
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center,
+        ) {
+            Image(
+                painter = painterResource(id = R.mipmap.note),
+                contentDescription = "笔记",
+                modifier = Modifier.size(50.dp)
+            )
+            Text(
+                text = "笔记总数",
+                color = fontColor,
+                fontSize = 12.sp,
+            )
+            Text(
+                text = "$noteCount 篇",
+                color = fontColor,
+                fontSize = 10.sp,
+            )
+        }
+        // 分类统计
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center,
+        ) {
+            Image(
+                painter = painterResource(id = R.mipmap.category),
+                contentDescription = "分类",
+                modifier = Modifier.size(50.dp)
+            )
+            Text(
+                text = "笔记分类",
+                color = fontColor,
+                fontSize = 12.sp,
+            )
+            Text(
+                text = "$categoryCount 个",
+                color = fontColor,
+                fontSize = 10.sp,
+            )
+        }
+    }
+        Spacer(modifier = Modifier.height(10.dp))
+        Row(
+        modifier = Modifier
+            .fillMaxWidth().padding(top = 10.dp)
+            .height(140.dp)
+            .background(subBackgroundColor, shape = MaterialTheme.shapes.medium)
+            .padding(10.dp),
+        horizontalArrangement = Arrangement.SpaceAround,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        // 产品统计
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center,
+        ) {
+            Image(
+                painter = painterResource(id = R.mipmap.product),
+                contentDescription = "产品",
+                modifier = Modifier.size(50.dp)
+            )
+            Text(
+                text = "产品总数",
+                color = fontColor,
+                fontSize = 12.sp,
+            )
+            Text(
+                text = "$productCount 个",
+                color = fontColor,
+                fontSize = 10.sp,
+            )
+        }
 
+        // 车票统计
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center,
+        ) {
+            Image(
+                painter = painterResource(id = R.mipmap.ticket),
+                contentDescription = "车票",
+                modifier = Modifier.size(50.dp)
+            )
+            Text(
+                text = "车票总数",
+                color = fontColor,
+                fontSize = 12.sp,
+            )
+            Text(
+                text = "$ticketCount 张",
+                color = fontColor,
+                fontSize = 10.sp,
+            )
+        }
+    }
         val selet_date = remember {
             mutableStateOf("")
         }
         // LineChart
+        Spacer(modifier = Modifier.height(10.dp))
+
         Column(
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally,
@@ -430,9 +543,7 @@ fun OverPage(
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .verticalScroll(
-                        rememberScrollState()
-                    )
+
             ) {
                 lists.forEachIndexed { index, code ->
                     Row(

@@ -298,8 +298,7 @@ fun AboutPage(
                             data = Uri.parse("mailto:wangxudong@oac.ac.cn")
                         }
                         context.startActivity(intent)
-                    }
-                    .padding(16.dp),
+                    }.padding(vertical = 10.dp),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
@@ -308,7 +307,7 @@ fun AboutPage(
                     color = getDarkModeTextColor(context)
                 )
                 Row(
-                    verticalAlignment = Alignment.CenterVertically
+
                 ) {
                     Text(
                         text = "wangxudong@oac.ac.cn",

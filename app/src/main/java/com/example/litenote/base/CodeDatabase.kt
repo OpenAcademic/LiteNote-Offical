@@ -17,6 +17,9 @@ import com.example.litenote.dao.DetailDao
 import com.example.litenote.dao.ExpressDao
 import com.example.litenote.dao.FormatDao
 import com.example.litenote.dao.LogDao
+import com.example.litenote.dao.NoteBlockDao
+import com.example.litenote.dao.NoteCategoryDao
+import com.example.litenote.dao.NoteDao
 import com.example.litenote.dao.PortsDao
 import com.example.litenote.dao.ProductDao
 import com.example.litenote.dao.ProductMaintenanceDao
@@ -33,8 +36,11 @@ import com.google.gson.Gson
                         Logbean::class,
                         Product::class,
                         ProductMaintenance::class,
-                        TrainTicket::class
-                     ], version = 8, exportSchema = false)
+                        TrainTicket::class,
+                        NoteCategory::class,
+                        Note::class,
+                        NoteBlock::class
+                     ], version = 11, exportSchema = false)
 abstract class CodeDatabase : RoomDatabase() {
 
     abstract fun codeDao(): CodeDao
@@ -46,6 +52,9 @@ abstract class CodeDatabase : RoomDatabase() {
     abstract fun productDao(): ProductDao
     abstract fun productMaintenanceDao(): ProductMaintenanceDao
     abstract fun trainTicketDao(): TrainTicketDao
+    abstract fun noteCategoryDao(): NoteCategoryDao
+    abstract fun noteDao(): NoteDao
+    abstract fun noteBlockDao(): NoteBlockDao
 
 
     companion object {
@@ -74,6 +83,12 @@ abstract class CodeDatabase : RoomDatabase() {
                         MIGRATION_6_7
                     ).addMigrations(
                         MIGRATION_7_8
+                    ).addMigrations(
+                        MIGRATION_8_9
+                    ).addMigrations(
+                        createEmptyMIgration(9, 10)
+                    ).addMigrations(
+                        createEmptyMIgration(10, 11)
                     ).fallbackToDestructiveMigration()
                     .build()
                 INSTANCE = instance
@@ -271,3 +286,53 @@ val MIGRATION_7_8 = object : Migration(7, 8) {
         database.execSQL("ALTER TABLE train_ticket_temp RENAME TO train_ticket")
     }
 }
+
+val MIGRATION_8_9 = object : Migration(8, 9) {
+    override fun migrate(database: SupportSQLiteDatabase) {
+        // 创建笔记分类表
+        database.execSQL("""
+            CREATE TABLE IF NOT EXISTS note_category (
+                id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                name TEXT NOT NULL
+            )
+        """)
+
+        // 创建笔记表
+        database.execSQL("""
+            CREATE TABLE IF NOT EXISTS note (
+                id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                title TEXT NOT NULL,
+                createTime INTEGER NOT NULL,
+                updateTime INTEGER NOT NULL,
+                categoryId INTEGER,
+                FOREIGN KEY(categoryId) REFERENCES note_category(id) ON DELETE SET NULL
+            )
+        """)
+
+        // 创建笔记块表
+        database.execSQL("""
+            CREATE TABLE IF NOT EXISTS note_block (
+                id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                noteId INTEGER NOT NULL,
+                orderId INTEGER NOT NULL,
+                content TEXT NOT NULL,
+                FOREIGN KEY(noteId) REFERENCES note(id) ON DELETE CASCADE
+            )
+        """)
+
+        // 为了提高查询性能，添加索引
+        database.execSQL("CREATE INDEX IF NOT EXISTS index_note_categoryId ON note(categoryId)")
+        database.execSQL("CREATE INDEX IF NOT EXISTS index_note_block_noteId ON note_block(noteId)")
+    }
+}
+
+fun createEmptyMIgration(
+    from: Int,
+    to: Int
+): Migration {
+    return object : Migration(from, to) {
+        override fun migrate(database: SupportSQLiteDatabase) {
+        }
+    }
+}
+

@@ -5,7 +5,6 @@
  * 
  */
 package  com.example.litenote.widget
-
 import android.content.Context
 import android.content.Intent
 import android.graphics.Canvas
@@ -97,6 +96,7 @@ import com.example.litenote.utils.getDarkModeTextColor
 import com.example.litenote.utils.getProductTypeIcon
 import com.example.litenote.utils.timeStempToTime
 import com.example.litenote.utils.daysToYearDays
+
 @Composable
 fun TrainTicketCard(
     ticket: TrainTicket,

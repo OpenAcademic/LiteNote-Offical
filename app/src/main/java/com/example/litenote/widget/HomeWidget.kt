@@ -28,6 +28,7 @@ import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.rememberScrollState
 
 val TOOLBARS = listOf(
+    R.string.note,
     R.string.home,
     R.string.overview,
     R.string.product,

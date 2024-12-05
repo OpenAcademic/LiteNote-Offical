@@ -11,6 +11,7 @@ import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import androidx.activity.ComponentActivity
+import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.Image
@@ -27,11 +28,13 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -42,10 +45,12 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
 import com.example.litenote.ui.theme.LiteNoteTheme
 import com.example.litenote.utils.ConfigUtils
 import com.example.litenote.utils.FileSizeUtil
 import com.example.litenote.utils.HomeStyle
+import com.example.litenote.utils.HomeType
 import com.example.litenote.utils.ModeType
 import com.example.litenote.utils.ModelList
 import com.example.litenote.utils.NewPermissionUtils
@@ -96,6 +101,7 @@ class MoreSettingsActivity : ComponentActivity() {
         // check_file()
         model.value = ConfigUtils.checkModelListConfig(this@MoreSettingsActivity)
         select_index.value = model_list.indexOf(model.value.show)
+        homeType.value = ConfigUtils.checkHomeTypeConfig(this@MoreSettingsActivity)
         device_style.value = ConfigUtils.checkSwitchConfig(
             this@MoreSettingsActivity,
             "product_list_view"
@@ -126,7 +132,7 @@ class MoreSettingsActivity : ComponentActivity() {
     val  is_downloading = mutableStateOf(false)
     val file_isExist = mutableStateOf(false)
     val lora_file_isExist = mutableStateOf(false)
-
+    val homeType = mutableStateOf(HomeType.CODE)
     val max_size = mutableStateOf(0L)
     val curr_size = mutableStateOf(0)
 
@@ -220,6 +226,9 @@ class MoreSettingsActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
+
+
+
             LiteNoteTheme {
                 Scaffold(
                     topBar = {
@@ -418,7 +427,111 @@ class MoreSettingsActivity : ComponentActivity() {
                             }
 
                         }
+                        Column(
+                            verticalArrangement = Arrangement.Center,
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(15.dp)
+                                .background(
+                                    color = getDarkModeBackgroundColor(
+                                        this@MoreSettingsActivity, 1
+                                    ),
+                                    shape = MaterialTheme.shapes.medium
+                                )
+                                .padding(15.dp)
+                                .clip(RoundedCornerShape(15.dp))
+                        ) {
+                            Text(text = "首页展示项目", fontSize = 25.sp)
+                            val showHomeItemsDialog = remember { mutableStateOf(false) }
 
+
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clickable { showHomeItemsDialog.value = true }
+                                    .padding(vertical = 8.dp),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = "首页展示",
+                                    fontSize = 16.sp,
+                                    color = getDarkModeTextColor(this@MoreSettingsActivity)
+                                )
+                                Text(
+                                    text = when(homeType.value){
+                                        HomeType.CODE -> "取件码"
+                                        HomeType.PRODUCT -> "产品管理"
+                                        HomeType.TRAIN_TICKET -> "车票收藏"
+                                        HomeType.NOTE -> "笔记"
+                                        else -> "笔记"
+                                    },
+                                    fontSize = 14.sp,
+                                    color = getDarkModeTextColor(this@MoreSettingsActivity).copy(alpha = 0.6f)
+                                )
+                            }
+
+                            if (showHomeItemsDialog.value) {
+                                Dialog(
+                                    onDismissRequest = { showHomeItemsDialog.value = false },
+                                    content = {
+                                        Column(
+                                            modifier = Modifier
+                                                .background(
+                                                    color = getDarkModeBackgroundColor(
+                                                        this@MoreSettingsActivity, 1
+                                                    ),
+                                                    shape = MaterialTheme.shapes.medium
+                                                )
+                                                .padding(15.dp)
+                                                .clip(RoundedCornerShape(15.dp)
+                                                ),
+                                            verticalArrangement = Arrangement.Center,
+                                            horizontalAlignment = Alignment.CenterHorizontally
+                                        ) {
+                                            val items = listOf(
+                                                "取件码" to HomeType.CODE,
+                                                "产品管理" to HomeType.PRODUCT,
+                                                "车票收藏" to HomeType.TRAIN_TICKET,
+                                                "笔记" to HomeType.NOTE
+                                            )
+                                            items.forEach { (name, key) ->
+                                                Row(
+                                                    modifier = Modifier
+                                                        .fillMaxWidth()
+                                                        .padding(vertical = 8.dp),
+                                                    verticalAlignment = Alignment.CenterVertically
+                                                ) {
+                                                    Row(
+                                                        modifier = Modifier
+                                                            .fillMaxWidth().clickable {
+                                                                homeType.value = key
+                                                                ConfigUtils.setHomeTypeConfig(
+                                                                    this@MoreSettingsActivity,
+                                                                    key
+                                                                )
+                                                                showHomeItemsDialog.value = false
+                                                            },
+                                                        verticalAlignment = Alignment.CenterVertically,
+                                                        horizontalArrangement = Arrangement.Start
+                                                    ){
+                                                        Text(
+                                                            text = name,
+                                                            fontSize = 24.sp,
+                                                            color = getDarkModeTextColor(this@MoreSettingsActivity),
+                                                            fontWeight = androidx.compose.ui.text.font.FontWeight.Bold
+                                                        )
+                                                    }
+
+                                                }
+                                            }
+                                        }
+                                    },
+
+                                )
+                            }
+                        }
                         Column(
                             verticalArrangement = Arrangement.Center,
                             horizontalAlignment = Alignment.CenterHorizontally,

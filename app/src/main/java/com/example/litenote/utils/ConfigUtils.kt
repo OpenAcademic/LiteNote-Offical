@@ -45,6 +45,23 @@ fun getModelList(value: Int): ModelList {
     }
 }
 
+enum class HomeType(val value: Int) {
+    CODE(1),
+    NOTE(0),
+    PRODUCT(3),
+    TRAIN_TICKET(4),
+    ;
+} 
+fun getHomeType(value: Int): HomeType {
+    return when (value) {
+        0 -> HomeType.NOTE
+        1 -> HomeType.CODE
+        3 -> HomeType.PRODUCT
+        4 -> HomeType.TRAIN_TICKET
+        else -> HomeType.CODE
+    }
+}
+
 object ConfigUtils {
     fun checkSwitchConfig(context: Context,name:String):Boolean{
         val sharePref = context.getSharedPreferences("settings", Context.MODE_PRIVATE)
@@ -66,6 +83,22 @@ object ConfigUtils {
         val sharePref = context.getSharedPreferences("settings", Context.MODE_PRIVATE)
         val editor = sharePref.edit()
         editor.putInt("dark", value.value)
+        editor.apply()
+    }
+    fun getHomeTypeNum(context: Context):Int{
+        val sharePref = context.getSharedPreferences("settings", Context.MODE_PRIVATE)
+        val  isDisableDefault = sharePref.getInt("homeType", 1)
+        return isDisableDefault
+    }
+    fun checkHomeTypeConfig(context: Context):HomeType{
+        val sharePref = context.getSharedPreferences("settings", Context.MODE_PRIVATE)
+        val  isDisableDefault = sharePref.getInt("homeType", 1)
+        return getHomeType(isDisableDefault)
+    }
+    fun setHomeTypeConfig(context: Context,value:HomeType){
+        val sharePref = context.getSharedPreferences("settings", Context.MODE_PRIVATE)
+        val editor = sharePref.edit()
+        editor.putInt("homeType", value.value)
         editor.apply()
     }
     fun checkHomeStyleConfig(context: Context,name:String):HomeStyle{

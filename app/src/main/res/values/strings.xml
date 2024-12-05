@@ -1,7 +1,7 @@
 <resources>
     <string name="app_name">LiteNote</string>
     <string name="demo">Restart</string>
-    <string name="home">Home</string>
+    <string name="home">PickCode</string>
     <string name="overview">Overview</string>
     <string name="setting">Settings</string>
     <string name="all">"All "</string>
@@ -139,4 +139,10 @@
     <string name="product_view_style">产品管理展示风格</string>
     <string name="product_view_style_list">列表视图</string>
     <string name="product_view_style_grid">卡片视图</string>
+    <string name="note">笔记</string>
+    <string name="title_sub_activity_help_llmactivity">NoteEditActivity</string>
+    <string name="add_ticket">添加车票</string>
+    <string name="title_activity_more">MoreActivity</string>
+    <string name="more_action">更多功能</string>
+    <string name="train_ticket">车票收藏</string>
 </resources>

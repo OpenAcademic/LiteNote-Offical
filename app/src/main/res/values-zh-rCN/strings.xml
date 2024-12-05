@@ -2,7 +2,7 @@
 <resources>
     <string name="app_name">轻笔记</string>
     <string name="demo">重启</string>
-    <string name="home">首页</string>
+    <string name="home">取件码</string>
     <string name="overview">纵览</string>
     <string name="setting">设置</string>
     <string name="all">全部</string>
