@@ -1,6 +1,9 @@
 [versions]
 agp = "8.5.1"
+comGithubPromegTinypinyinLexiconsAndroidCncity31 = "2.0.3"
+comGithubPromegTinypinyin18 = "2.0.3"
 composeMarkdownVersion = "0.5.0"
+composeQrCode = "1.0.1"
 kotlin = "2.0.0-RC1"
 coreKtx = "1.13.1"
 junit = "4.13.2"
@@ -18,6 +21,9 @@ ezxhelper = "2.2.0"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
+com-github-promeg-tinypinyin19 = { module = "com.github.promeg:tinypinyin", version.ref = "comGithubPromegTinypinyin18" }
+com-github-promeg-tinypinyin-lexicons-android-cncity32 = { module = "com.github.promeg:tinypinyin-lexicons-android-cncity", version.ref = "comGithubPromegTinypinyinLexiconsAndroidCncity31" }
+compose-qr-code = { module = "com.lightspark:compose-qr-code", version.ref = "composeQrCode" }
 jeziellago-compose-markdown = { module = "com.github.jeziellago:compose-markdown", version.ref = "composeMarkdownVersion" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitVersion" }

@@ -40,7 +40,7 @@ import com.google.gson.Gson
                         NoteCategory::class,
                         Note::class,
                         NoteBlock::class
-                     ], version = 11, exportSchema = false)
+                     ], version = 12, exportSchema = false)
 abstract class CodeDatabase : RoomDatabase() {
 
     abstract fun codeDao(): CodeDao
@@ -89,7 +89,9 @@ abstract class CodeDatabase : RoomDatabase() {
                         createEmptyMIgration(9, 10)
                     ).addMigrations(
                         createEmptyMIgration(10, 11)
-                    ).fallbackToDestructiveMigration()
+                    ).addMigrations(
+                        createEmptyMIgration(11, 12)
+                    )
                     .build()
                 INSTANCE = instance
                 return instance
@@ -333,6 +335,38 @@ fun createEmptyMIgration(
     return object : Migration(from, to) {
         override fun migrate(database: SupportSQLiteDatabase) {
         }
+    }
+}
+
+val MIGRATION_11_12 = object : Migration(11, 12) {
+    override fun migrate(database: SupportSQLiteDatabase) {
+        // @Entity(tableName = "format")
+        //data class CodeFormat(
+        //    @PrimaryKey(autoGenerate = true)
+        //    val id: Long = 0,
+        //
+        //    var codeFormat: String,
+        //    var codeLength : Int,
+        //    var codeTypes : String,  // 【0,1,3
+
+        // enum class CodeLatterType(
+        //    val value: Int
+        //) {
+        //    NONE(-1),
+        //    NUMBER(0),
+        //    BIG_LETTER(1),
+        //    ALL(2),
+        //    SPLICE_LETTER(3)
+        //}
+        //    )
+        // 添加 var reg1 = Regex("[0-9]{2,3}-[0-9]{1,2}-[0-9]{4}")
+        //            var reg2 = Regex("[A-Z]{1}[0-9]{4}")
+        //            var reg3 = Regex("[0-9]{3}-[0-9]{4}")
+        // 将默认 规则 添加到数据库
+
+
+
+
     }
 }
 

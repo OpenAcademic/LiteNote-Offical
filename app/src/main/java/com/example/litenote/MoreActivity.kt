@@ -373,8 +373,7 @@ class MoreActivity : ComponentActivity() {
     }
     override fun onResume() {
         super.onResume()
-
-
+        initDb()
     }
     val isKeyDelete = mutableStateOf(false)
     val isKeyEdit = mutableStateOf(false)
@@ -383,7 +382,7 @@ class MoreActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-        currTag.value = intent.getIntExtra("tag", 0)
+        currTag.value = intent.getIntExtra("tag", 1)
         loadCategories()
         db = CodeDatabase.getDatabase(this@MoreActivity)
         initService()

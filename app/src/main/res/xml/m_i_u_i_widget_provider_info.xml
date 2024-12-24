@@ -4,6 +4,7 @@
     android:initialKeyguardLayout="@layout/m_i_u_i_widget_provider"
     android:initialLayout="@layout/m_i_u_i_widget_provider"
     android:minWidth="110dp"
+
     android:minHeight="110dp"
     android:previewImage="@drawable/example_appwidget_preview"
 

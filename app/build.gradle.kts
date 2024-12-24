@@ -1,3 +1,4 @@
+import org.jetbrains.kotlin.ir.backend.js.compile
 import java.util.Properties
 
 plugins {
@@ -16,13 +17,20 @@ android {
         minSdk= 29
         maxSdk =35
         targetSdk =35
-        versionCode = 3000040
-        versionName = "2.4.0"
+        versionCode = 3000050
+        versionName = "2.5.0.BETA"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
             useSupportLibrary = true
         }
+    }
+    buildTypes {
+        create("google") {
+            initWith(getByName("release"))
+            applicationIdSuffix = ".google"
+        }
+
     }
     signingConfigs {
         create("dp") {
@@ -143,13 +151,17 @@ dependencies {
 
     val room_version = "2.6.1"
 
+    implementation(libs.com.github.promeg.tinypinyin19) // TinyPinyin核心包，
+
+
+
     implementation("androidx.room:room-runtime:$room_version")
     annotationProcessor("androidx.room:room-compiler:$room_version")
 
     // To use Kotlin annotation processing tool (kapt)
     // To use Kotlin Symbol Processing (KSP)
     kapt("androidx.room:room-compiler:$room_version")
-
+    implementation("com.belerweb:pinyin4j:2.5.0")
     //ksp("androidx.room:room-compiler:$room_version")
     // optional - Kotlin Extensions and Coroutines support for Room
     implementation("androidx.room:room-ktx:$room_version")
@@ -183,4 +195,12 @@ dependencies {
     implementation("com.github.jeziellago:compose-markdown:0.3.6")
 
     implementation("de.psdev.licensesdialog:licensesdialog:2.1.0")
+
+
+
+    implementation(libs.compose.qr.code)
+
+    implementation("com.umeng.umsdk:common:9.4.7")// 必选
+    implementation("com.umeng.umsdk:asms:1.4.0")// 必选
+
 }

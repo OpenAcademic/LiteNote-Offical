@@ -7,33 +7,19 @@
 package  com.example.litenote.desktopwidget
 
 import android.app.PendingIntent
-import android.appwidget.AppWidgetManager
-import android.appwidget.AppWidgetProvider
-import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.os.Build
-import android.util.Log
-import android.widget.RemoteViews
 import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.lazy.grid.LazyHorizontalGrid
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowForward
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.unit.TextUnit
-import androidx.compose.ui.unit.TextUnitType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.glance.Button
@@ -41,16 +27,10 @@ import androidx.glance.ButtonDefaults
 import androidx.glance.GlanceId
 import androidx.glance.GlanceModifier
 import androidx.glance.GlanceTheme
-import androidx.glance.action.ActionParameters
-import androidx.glance.action.actionParametersOf
-import androidx.glance.action.actionStartActivity
 import androidx.glance.action.clickable
-import androidx.glance.action.toParameters
 import androidx.glance.appwidget.GlanceAppWidget
 import androidx.glance.appwidget.GlanceAppWidgetReceiver
 import androidx.glance.appwidget.cornerRadius
-import androidx.glance.appwidget.lazy.GridCells
-import androidx.glance.appwidget.lazy.LazyVerticalGrid
 import androidx.glance.appwidget.provideContent
 import androidx.glance.background
 import androidx.glance.layout.Alignment
@@ -68,18 +48,12 @@ import androidx.glance.text.Text
 import androidx.glance.text.TextAlign
 import androidx.glance.text.TextStyle
 import androidx.glance.unit.ColorProvider
-import com.example.litenote.MainActivity
 import com.example.litenote.PostCardActivity
 import com.example.litenote.R
 import com.example.litenote.dbutils.CodeDBUtils
 import com.example.litenote.dbutils.DetailName
-import com.example.litenote.entity.CItem
-import com.example.litenote.entity.Code
-import com.example.litenote.sub.LeftButton
-import com.example.litenote.utils.getDarkModeBackgroundColor
 import com.example.litenote.utils.getDarkModeTextColor2
 import com.example.litenote.utils.getWidgetDarkModeBackgroundColor2
-import com.example.litenote.utils.isDarkMode
 
 /**
  * Implementation of App Widget functionality.
@@ -250,6 +224,6 @@ class DesktopCodeMWidgetProvide : GlanceAppWidget() {
 
 }
 
-class DesktopCodeMWidget : GlanceAppWidgetReceiver() {
+class DesktopCodeWidgetService : GlanceAppWidgetReceiver() {
     override val glanceAppWidget: GlanceAppWidget = DesktopCodeMWidgetProvide()
 }

@@ -52,6 +52,7 @@ import com.example.litenote.service.MessageService
 import com.example.litenote.ui.theme.LiteNoteTheme
 import com.example.litenote.utils.PermissionUtils
 import com.example.litenote.utils.getDarkModeBackgroundColor
+import com.umeng.commonsdk.UMConfigure
 import okhttp3.internal.wait
 @Composable
 fun WebView(
@@ -78,32 +79,50 @@ class InitActivity : ComponentActivity() {
     var pages = mutableStateOf(0)
     var isHaveFlout = mutableStateOf(false)
     var isHavePermission = mutableStateOf(false)
+    var isUpdating = mutableStateOf(false)
     var permissionsNow = PermissionUtils.permissions
     override fun onResume() {
         super.onResume()
         val sharedPreferences = getSharedPreferences("init", MODE_PRIVATE)
         val isFirst = sharedPreferences.getBoolean("isFirst", true)
-        if (!isFirst) {
-            val intent = Intent(this@InitActivity, MainActivity::class.java)
-            startActivity(intent)
-            finish()
-        }else{
-            isHaveFlout.value = PermissionUtils.checkShowOnLockScreen(this@InitActivity)
-            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
-                permissionsNow = listOf(
-                    "android.permission.RECEIVE_SMS",
-                    "android.permission.READ_SMS",
-                    "android.permission.POST_NOTIFICATIONS",
-                    "android.permission.FOREGROUND_SERVICE_SPECIAL_USE",
+        val isUpdated = sharedPreferences.getBoolean("isUpdated", false)
 
-                )
-                for (i in 0 until permissionsNow.size){
-                    Log.d("MainActivity", "permissionsNow: ${permissionsNow[i]}")
-                }
+        UMConfigure.preInit(
+            this@InitActivity,"675ea5ed8f232a05f1d54756","Offical Version"
+        )
+
+        if (isUpdated) {
+            if (!isFirst) {
+                val intent = Intent(this@InitActivity, MainActivity::class.java)
+                startActivity(intent)
+                finish()
             } else {
+                isHaveFlout.value = PermissionUtils.checkShowOnLockScreen(this@InitActivity)
+                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+                    permissionsNow = listOf(
+                        "android.permission.RECEIVE_SMS",
+                        "android.permission.READ_SMS",
+                        "android.permission.POST_NOTIFICATIONS",
+                        "android.permission.FOREGROUND_SERVICE_SPECIAL_USE",
 
+                        )
+                    for (i in 0 until permissionsNow.size) {
+                        Log.d("MainActivity", "permissionsNow: ${permissionsNow[i]}")
+                    }
+                } else {
+
+                }
+                isHavePermission.value = PermissionUtils.checkPermissions(
+                    this@InitActivity,
+                    permissionsNow.toTypedArray()
+                )
             }
-            isHavePermission.value = PermissionUtils.checkPermissions(this@InitActivity, permissionsNow.toTypedArray())
+        }else{
+            if (!isFirst){
+                isUpdating.value = true
+            }else{
+                isUpdating.value = false
+            }
         }
 
 
@@ -148,7 +167,345 @@ class InitActivity : ComponentActivity() {
             LiteNoteTheme {
                 Scaffold(
                     modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    if (pages.value == 0){
+                    AnimatedVisibility(visible = !isUpdating.value) {
+                        if (pages.value == 0){
+                            Column(
+                                modifier = Modifier
+                                    .padding(innerPadding)
+                                    .fillMaxWidth()
+                                    .background(
+                                        Color.White
+                                    )
+                                    .fillMaxHeight()
+
+                            ) {
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(20.dp)
+                                        .fillMaxHeight(0.1f),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.Center
+                                ) {
+                                    Image(
+                                        painter = painterResource(id = R.mipmap.ic_public_privacy),
+                                        contentDescription = "public privacy",
+                                        modifier = Modifier.size(60.dp)
+                                    )
+
+                                }
+
+                                WebView(
+                                    "file:///android_asset/ysxy.html",
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .fillMaxHeight(0.9f),)
+
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(10.dp)
+                                        .fillMaxHeight(),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.SpaceBetween
+                                ) {
+                                    Column(
+                                        modifier = Modifier
+                                            .padding(5.dp)
+                                            .clickable {
+                                                val editor = sharedPreferences.edit()
+                                                editor.putBoolean("isFirst", false)
+                                                editor.apply()
+
+                                                val intent =
+                                                    Intent(
+                                                        this@InitActivity,
+                                                        MainActivity::class.java
+                                                    )
+                                                startActivity(intent)
+                                                finish()
+                                            }
+                                    ) {
+                                        Text(resources.getString(R.string.refuse), color = Color.Blue)
+                                    }
+                                    Column(
+                                        modifier = Modifier
+                                            .padding(5.dp)
+                                            .clickable {
+                                                pages.value += 1
+                                            }
+                                    ) {
+                                        Text(resources.getString(R.string.agree), color = Color.Blue)
+                                    }
+
+                                }
+
+                            }
+
+                        }
+                        else if (pages.value==1){
+                            Column(
+                                modifier = Modifier
+                                    .padding(innerPadding)
+                                    .fillMaxWidth()
+                                    .background(
+                                        Color.White
+                                    )
+                                    .fillMaxHeight()
+
+                            ) {
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(20.dp)
+                                        .fillMaxHeight(0.1f),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.Center
+                                ) {
+                                    Image(
+                                        painter = painterResource(id = R.mipmap.ic_public_privacy),
+                                        contentDescription = "public privacy",
+                                        modifier = Modifier.size(60.dp)
+                                    )
+
+                                }
+
+                                WebView(
+                                    "file:///android_asset/yhxy.html",
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .fillMaxHeight(0.9f),)
+
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(10.dp)
+                                        .fillMaxHeight(),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.SpaceBetween
+                                ) {
+                                    Column(
+                                        modifier = Modifier
+                                            .padding(5.dp)
+                                            .clickable {
+                                                val editor = sharedPreferences.edit()
+                                                editor.putBoolean("isFirst", false)
+                                                editor.apply()
+
+                                                val intent =
+                                                    Intent(
+                                                        this@InitActivity,
+                                                        MainActivity::class.java
+                                                    )
+                                                startActivity(intent)
+
+                                                finish()
+
+                                            }
+                                    ) {
+                                        Text(resources.getString(R.string.refuse), color = Color.Blue)
+                                    }
+                                    Column(
+                                        modifier = Modifier
+                                            .padding(5.dp)
+                                            .clickable {
+                                                pages.value += 1
+                                            }
+                                    ) {
+                                        Text(resources.getString(R.string.agree), color = Color.Blue)
+                                    }
+
+                                }
+
+                            }
+                        }
+                        else if (pages.value==2){
+                            Column(
+                                modifier = Modifier
+                                    .padding(innerPadding)
+                                    .fillMaxWidth()
+                                    .background(
+                                        Color.White
+                                    )
+                                    .fillMaxHeight()
+
+                            ) {
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(20.dp)
+                                        .fillMaxHeight(0.1f),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.Center
+                                ) {
+                                    Image(
+                                        painter = painterResource(id = R.mipmap.ic_public_privacy),
+                                        contentDescription = "public privacy",
+                                        modifier = Modifier.size(60.dp)
+                                    )
+                                }
+                                Column(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .fillMaxHeight(0.9f),
+                                    verticalArrangement = Arrangement.Center,
+                                    horizontalAlignment = Alignment.CenterHorizontally
+                                ) {
+                                    Text(text = resources.getString(R.string.mypermissions),
+                                        color = Color.Black, fontSize = 30.sp, modifier = Modifier.padding(10.dp))
+                                    for (i in 0 until  PermissionUtils.permissions_usages.size){
+                                        Column(
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .padding(10.dp)
+                                                .background(
+                                                    Color(0xFFE0E0E0),
+                                                    shape = MaterialTheme.shapes.medium
+                                                ),
+                                            verticalArrangement = Arrangement.Center,
+                                            horizontalAlignment = Alignment.Start
+                                        ) {
+                                            Text(text = PermissionUtils.permissions_usages[i],
+                                                color = Color.Black, fontSize = 20.sp, fontWeight = FontWeight.Bold,
+                                                modifier = Modifier.padding(10.dp))
+                                            Text(text = PermissionUtils.permissions_descriptions[i],
+                                                color = Color.Black, fontSize = 15.sp,
+                                                modifier = Modifier.padding(10.dp))
+
+                                        }
+                                    }
+                                }
+
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(10.dp)
+                                        .fillMaxHeight(),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.SpaceBetween
+                                ) {
+                                    Column(
+                                        modifier = Modifier
+                                            .padding(5.dp)
+                                            .clickable {
+                                                val editor = sharedPreferences.edit()
+                                                editor.putBoolean("isFirst", false)
+                                                editor.apply()
+
+                                                val intent =
+                                                    Intent(
+                                                        this@InitActivity,
+                                                        MainActivity::class.java
+                                                    )
+                                                startActivity(intent)
+                                                finish()
+
+                                            }
+                                    ) {
+                                        Text(resources.getString(R.string.refuse)
+                                            , color = Color.Blue)
+                                    }
+                                    Column(
+                                        modifier = Modifier
+                                            .padding(5.dp)
+                                            .clickable {
+
+                                                if (!PermissionUtils.checkShowOnLockScreen(this@InitActivity)) {
+                                                    // 权限请求成功
+                                                    startActivity(Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION))
+                                                    Log.d("MainActivity", "start service")
+                                                } else {
+                                                    Log.d("MainActivity", "start service")
+                                                    if (PermissionUtils.checkPermissions(
+                                                            this@InitActivity,
+                                                            permissionsNow.toTypedArray()
+                                                        )
+                                                    ) {
+                                                        Log.d("MainActivity", "start service2")
+                                                        pages.value += 1
+                                                    } else {
+                                                        Log.d("MainActivity", "start service3")
+                                                        requestPermissions(
+                                                            permissionsNow.toTypedArray(),
+                                                            1
+                                                        )
+                                                    }
+                                                }
+                                            }
+                                    ) {
+                                        Text(resources.getString(R.string.next)
+                                            , color = Color.Blue)
+                                    }
+
+                                }
+
+                            }
+                        }
+                        else if (pages.value==3){
+                            Column(
+                                modifier = Modifier
+                                    .padding(innerPadding)
+                                    .fillMaxWidth()
+                                    .background(
+                                        Color.White
+                                    )
+                                    .fillMaxHeight(),
+                                verticalArrangement = Arrangement.Center,
+                                horizontalAlignment = Alignment.CenterHorizontally
+                            ){
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(20.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.Center
+                                ) {
+                                    Image(
+                                        painter = painterResource(id = R.drawable.dd),
+                                        contentDescription = "enjoy",
+                                        modifier = Modifier.size(150.dp)
+                                    )
+                                }
+                                Column(
+                                    modifier = Modifier
+                                        .width(180.dp)
+                                        .padding(10.dp)
+                                        .clickable {
+                                            val editor = sharedPreferences.edit()
+                                            editor.putBoolean("isFirst", false)
+                                            editor.apply()
+                                            editor
+                                                .putBoolean("agent", true)
+                                                .apply()
+
+                                            val intent =
+                                                Intent(this@InitActivity, MainActivity::class.java)
+                                            startActivity(intent)
+                                            finish()
+                                        }
+                                        .background(
+                                            getDarkModeBackgroundColor(
+                                                context = this@InitActivity,
+                                                level = 1
+                                            ),
+                                            shape = MaterialTheme.shapes.extraLarge
+                                        )
+                                        .padding(
+                                            8.dp
+                                        )
+                                    ,
+                                    verticalArrangement = Arrangement.Center,
+                                    horizontalAlignment = Alignment.CenterHorizontally
+                                ) {
+                                    Text(text = resources.getString(R.string.enjoy),
+                                        color = Color.Blue,
+                                        fontSize = 30.sp,
+                                        modifier = Modifier.padding(10.dp))
+                                }
+                            }
+                        }
+                    }
+                    AnimatedVisibility(visible = isUpdating.value) {
                         Column(
                             modifier = Modifier
                                 .padding(innerPadding)
@@ -157,6 +514,9 @@ class InitActivity : ComponentActivity() {
                                     Color.White
                                 )
                                 .fillMaxHeight()
+                                .verticalScroll(
+                                    rememberScrollState()
+                                )
 
                         ) {
                             Row(
@@ -171,8 +531,18 @@ class InitActivity : ComponentActivity() {
                                     painter = painterResource(id = R.mipmap.ic_public_privacy),
                                     contentDescription = "public privacy",
                                     modifier = Modifier.size(60.dp)
-                                    )
+                                )
 
+                            }
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(10.dp)
+                                    .fillMaxHeight(),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                Text(text = "我们最近更新了隐私协议。")
                             }
 
                             WebView(
@@ -193,12 +563,12 @@ class InitActivity : ComponentActivity() {
                                     modifier = Modifier
                                         .padding(5.dp)
                                         .clickable {
-                                            val editor = sharedPreferences.edit()
-                                            editor.putBoolean("isFirst", false)
-                                            editor.apply()
 
                                             val intent =
-                                                Intent(this@InitActivity, MainActivity::class.java)
+                                                Intent(
+                                                    this@InitActivity,
+                                                    MainActivity::class.java
+                                                )
                                             startActivity(intent)
                                             finish()
                                         }
@@ -209,81 +579,24 @@ class InitActivity : ComponentActivity() {
                                     modifier = Modifier
                                         .padding(5.dp)
                                         .clickable {
-                                            pages.value += 1
-                                        }
-                                ) {
-                                    Text(resources.getString(R.string.agree), color = Color.Blue)
-                                }
-
-                            }
-
-                        }
-
-                    }
-                    else if (pages.value==1){
-                        Column(
-                            modifier = Modifier
-                                .padding(innerPadding)
-                                .fillMaxWidth()
-                                .background(
-                                    Color.White
-                                )
-                                .fillMaxHeight()
-
-                        ) {
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(20.dp)
-                                    .fillMaxHeight(0.1f),
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.Center
-                            ) {
-                                Image(
-                                    painter = painterResource(id = R.mipmap.ic_public_privacy),
-                                    contentDescription = "public privacy",
-                                    modifier = Modifier.size(60.dp)
-                                )
-
-                            }
-
-                            WebView(
-                                "file:///android_asset/yhxy.html",
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .fillMaxHeight(0.9f),)
-
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(10.dp)
-                                    .fillMaxHeight(),
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.SpaceBetween
-                            ) {
-                                Column(
-                                    modifier = Modifier
-                                        .padding(5.dp)
-                                        .clickable {
                                             val editor = sharedPreferences.edit()
-                                            editor.putBoolean("isFirst", false)
+                                            editor.putBoolean("isUpdated", true)
                                             editor.apply()
+                                            editor
+                                                .putBoolean("agent", true)
+                                                .apply()
 
                                             val intent =
                                                 Intent(this@InitActivity, MainActivity::class.java)
                                             startActivity(intent)
-
+                                            UMConfigure.init(
+                                                this@InitActivity,
+                                                "675ea5ed8f232a05f1d54756",
+                                                "Offical Version",
+                                                UMConfigure.DEVICE_TYPE_PHONE,
+                                                ""
+                                            );
                                             finish()
-
-                                        }
-                                ) {
-                                    Text(resources.getString(R.string.refuse), color = Color.Blue)
-                                }
-                                Column(
-                                    modifier = Modifier
-                                        .padding(5.dp)
-                                        .clickable {
-                                            pages.value += 1
                                         }
                                 ) {
                                     Text(resources.getString(R.string.agree), color = Color.Blue)
@@ -293,183 +606,7 @@ class InitActivity : ComponentActivity() {
 
                         }
                     }
-                    else if (pages.value==2){
-                        Column(
-                            modifier = Modifier
-                                .padding(innerPadding)
-                                .fillMaxWidth()
-                                .background(
-                                    Color.White
-                                )
-                                .fillMaxHeight()
-
-                        ) {
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(20.dp)
-                                    .fillMaxHeight(0.1f),
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.Center
-                            ) {
-                                Image(
-                                    painter = painterResource(id = R.mipmap.ic_public_privacy),
-                                    contentDescription = "public privacy",
-                                    modifier = Modifier.size(60.dp)
-                                )
-                            }
-                            Column(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .fillMaxHeight(0.9f),
-                                verticalArrangement = Arrangement.Center,
-                                horizontalAlignment = Alignment.CenterHorizontally
-                            ) {
-                                Text(text = resources.getString(R.string.mypermissions),
-                                    color = Color.Black, fontSize = 30.sp, modifier = Modifier.padding(10.dp))
-                                for (i in 0 until  PermissionUtils.permissions_usages.size){
-                                    Column(
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .padding(10.dp)
-                                            .background(
-                                                Color(0xFFE0E0E0),
-                                                shape = MaterialTheme.shapes.medium
-                                            ),
-                                        verticalArrangement = Arrangement.Center,
-                                        horizontalAlignment = Alignment.Start
-                                    ) {
-                                        Text(text = PermissionUtils.permissions_usages[i],
-                                            color = Color.Black, fontSize = 20.sp, fontWeight = FontWeight.Bold,
-                                            modifier = Modifier.padding(10.dp))
-                                        Text(text = PermissionUtils.permissions_descriptions[i],
-                                            color = Color.Black, fontSize = 15.sp,
-                                            modifier = Modifier.padding(10.dp))
-
-                                    }
-                                }
-                            }
-
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(10.dp)
-                                    .fillMaxHeight(),
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.SpaceBetween
-                            ) {
-                                Column(
-                                    modifier = Modifier
-                                        .padding(5.dp)
-                                        .clickable {
-                                            val editor = sharedPreferences.edit()
-                                            editor.putBoolean("isFirst", false)
-                                            editor.apply()
-
-                                            val intent =
-                                                Intent(this@InitActivity, MainActivity::class.java)
-                                            startActivity(intent)
-                                            finish()
-
-                                        }
-                                ) {
-                                    Text(resources.getString(R.string.refuse)
-                                        , color = Color.Blue)
-                                }
-                                Column(
-                                    modifier = Modifier
-                                        .padding(5.dp)
-                                        .clickable {
-
-                                            if (!PermissionUtils.checkShowOnLockScreen(this@InitActivity)) {
-                                                // 权限请求成功
-                                                startActivity(Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION))
-                                                Log.d("MainActivity", "start service")
-                                            } else {
-                                                Log.d("MainActivity", "start service")
-                                                if (PermissionUtils.checkPermissions(
-                                                        this@InitActivity,
-                                                        permissionsNow.toTypedArray()
-                                                    )
-                                                ) {
-                                                    Log.d("MainActivity", "start service2")
-                                                    pages.value += 1
-                                                } else {
-                                                    Log.d("MainActivity", "start service3")
-                                                    requestPermissions(
-                                                        permissionsNow.toTypedArray(),
-                                                        1
-                                                    )
-                                                }
-                                            }
-                                        }
-                                ) {
-                                    Text(resources.getString(R.string.next)
-                                        , color = Color.Blue)
-                                }
-
-                            }
-
-                        }
-                    }
-                    else if (pages.value==3){
-                        Column(
-                            modifier = Modifier
-                                .padding(innerPadding)
-                                .fillMaxWidth()
-                                .background(
-                                    Color.White
-                                )
-                                .fillMaxHeight(),
-                            verticalArrangement = Arrangement.Center,
-                            horizontalAlignment = Alignment.CenterHorizontally
-                        ){
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(20.dp),
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.Center
-                            ) {
-                                Image(
-                                    painter = painterResource(id = R.drawable.dd),
-                                    contentDescription = "enjoy",
-                                    modifier = Modifier.size(150.dp)
-                                )
-                            }
-                            Column(
-                                modifier = Modifier
-                                    .width(180.dp)
-                                    .padding(10.dp)
-                                    .clickable {
-                                        val editor = sharedPreferences.edit()
-                                        editor.putBoolean("isFirst", false)
-                                        editor.apply()
-                                        editor.putBoolean("agent", true)
-                                            .apply()
-
-                                        val intent =
-                                            Intent(this@InitActivity, MainActivity::class.java)
-                                        startActivity(intent)
-                                        finish()
-                                    }
-                                    .background(
-                                        getDarkModeBackgroundColor(context = this@InitActivity, level = 1),
-                                        shape = MaterialTheme.shapes.extraLarge
-                                    ).padding(
-                                        8.dp
-                                    )
-                                  ,
-                                verticalArrangement = Arrangement.Center,
-                                horizontalAlignment = Alignment.CenterHorizontally
-                            ) {
-                                Text(text = resources.getString(R.string.enjoy),
-                                    color = Color.Blue,
-                                    fontSize = 30.sp,
-                                    modifier = Modifier.padding(10.dp))
-                            }
-                        }
-                    }
+                   
                 }
             }
         }

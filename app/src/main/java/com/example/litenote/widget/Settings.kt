@@ -9,8 +9,11 @@ package  com.example.litenote.widget
 
 import android.annotation.SuppressLint
 import android.content.Context
+import android.content.Intent
+import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
@@ -29,13 +32,17 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.litenote.LogDetailActivity
 import com.example.litenote.R
 import com.example.litenote.utils.getDarkModeBackgroundColor
 import com.example.litenote.utils.getDarkModeTextColor
@@ -103,13 +110,33 @@ fun SettingsPage(
                 Text(
                     text = resources.getString(R.string.app_name),
                     fontSize = 40.sp,
+                    modifier = Modifier.fillMaxWidth(),
                     fontWeight = FontWeight.Bold,
-                    color = getDarkModeTextColor(context)
+                    color = getDarkModeTextColor(context),
+                    textAlign = TextAlign.Center
                 )
                 Spacer(modifier = Modifier.height(8.dp))
+                val times = remember {
+                    mutableStateOf(10)
+                }
                 Text(
-                    text = "版本 ${context.packageManager.getPackageInfo(context.packageName, 0).versionName}",
+                    text = "版本: ${context.packageManager.getPackageInfo(context.packageName, 0).versionName}(${context.packageManager.getPackageInfo(context.packageName, 0).versionCode})",
                     fontSize = 16.sp,
+                    modifier = Modifier.pointerInput(Unit){
+                        detectTapGestures(
+                            onTap = {
+                                times.value -= 1
+                                if (times.value == 0){
+                                    Toast.makeText(context,"已为您跳转日志界面",Toast.LENGTH_SHORT).show()
+                                    context.startActivity(
+                                        Intent(context,LogDetailActivity::class.java)
+                                    )
+                                    times.value = 10
+                                }
+                            }
+                        )
+
+                    },
                     color = getDarkModeTextColor(context).copy(alpha = 0.6f)
                 )
             }
@@ -304,14 +331,7 @@ fun MoreActionPage(
                     }
                 }
 
-                if (index!=settingItems.size-1){
-                    Spacer(modifier = Modifier
-                        .fillMaxWidth()
-                        .height(1.dp)
-                        .background(
-                            color = getDarkModeBackgroundColor(context, 2)
-                        ))
-                }
+
 
 
             }

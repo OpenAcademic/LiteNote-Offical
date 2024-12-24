@@ -7,6 +7,7 @@
 package  com.example.litenote
 
 import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import android.util.Log
 import android.widget.Toast
@@ -69,6 +70,7 @@ import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.input.pointer.positionChanged
 import androidx.compose.ui.res.painterResource
@@ -84,7 +86,9 @@ import com.example.litenote.dbutils.ExpressDao
 import com.example.litenote.dbutils.LogDBUtils
 import com.example.litenote.dbutils.OverLookOBJ
 import com.example.litenote.dbutils.PortDao
+import com.example.litenote.desktopwidget.MIUIDesktopProductWidgetConfigureActivity
 import com.example.litenote.entity.Code
+import com.example.litenote.entity.CodeFormat
 import com.example.litenote.entity.Note
 import com.example.litenote.entity.NoteCategory
 import com.example.litenote.entity.Product
@@ -151,8 +155,8 @@ class MainActivity : ComponentActivity() {
         }
     }
     private val trainTickets = mutableStateListOf<TrainTicket>()
-private val currentPage = mutableStateOf(1)
-private val totalTickets = mutableStateOf(0)
+    private val currentPage = mutableStateOf(1)
+    private val totalTickets = mutableStateOf(0)
     private val notes = mutableStateListOf<Note>()
     private fun loadTrainTickets() {
         val db = CodeDatabase.getDatabase(this)
@@ -189,7 +193,8 @@ private val totalTickets = mutableStateOf(0)
             val homeType = ConfigUtils.getHomeTypeNum(this@MainActivity)
             currTag.value = homeType
             initDb2()
-        }else if (current_home_page.value == 1){
+        }
+        else if (current_home_page.value == 1){
             settings.clear()
             val homeType = ConfigUtils.getHomeTypeNum(this@MainActivity)
             currTag.value = homeType
@@ -309,6 +314,20 @@ private val totalTickets = mutableStateOf(0)
                         PolicyActivity::class.java
                     )
                     intent.putExtra("urls", "file:///android_asset/yhxy.html")
+                    startActivity(intent)
+
+                }
+            )
+
+            settings.add(
+                SettingItems(
+                    R.string.help_me,0,0
+                ) {
+                    // file:///android_asset/yhxy.html
+                    val intent = Intent(
+                        this@MainActivity,
+                        HelpActivity2::class.java
+                    )
                     startActivity(intent)
 
                 }
@@ -460,11 +479,59 @@ private val totalTickets = mutableStateOf(0)
     }
     override fun onResume() {
         super.onResume()
+        // 检查是否添加了默认的取件码规则
+        val is_add = ConfigUtils.checkSwitchConfig(this@MainActivity, "is_add_defcode")
+        if (!is_add) {
+            val database: CodeDatabase =
+                CodeDatabase.getDatabase(this@MainActivity)
+            val formatDao = database.formatDao()
+            var format = CodeFormat(
+                codeFormat = "[0-9]{2}-[0-9]{1}-[0-9]{4}",
+                codeLength = 9,
+                codeTypes = "[0,0,3,0,3,0,0,0,0]"
+            )
+            formatDao.insert(format)
+            format = CodeFormat(
+                codeFormat = "[0-9]{2}-[0-9]{2}-[0-9]{4}",
+                codeLength = 10,
+                codeTypes = "[0,0,3,0,0,3,0,0,0,0]"
+            )
+            formatDao.insert(format)
+            format = CodeFormat(
+                codeFormat = "[0-9]{3}-[0-9]{1}-[0-9]{4}",
+                codeLength = 10,
+                codeTypes = "[0,0,0,3,0,3,0,0,0,0]"
+            )
+            formatDao.insert(format)
+            format = CodeFormat(
+                codeFormat = "[0-9]{3}-[0-9]{2}-[0-9]{4}",
+                codeLength = 11,
+                codeTypes = "[0,0,0,3,0,0,3,0,0,0,0]"
+            )
+            formatDao.insert(format)
+            format = CodeFormat(
+                codeFormat = "[A-Z]{1}[0-9]{4}",
+                codeLength = 5,
+                codeTypes = "[1,0,0,0,0]"
+            )
+            formatDao.insert(format)
+            format = CodeFormat(
+                codeFormat = "[0-9]{3}-[0-9]{4}",
+                codeLength = 8,
+                codeTypes = "[0,0,0,3,0,0,0,0]"
+            )
+            formatDao.insert(format)
+            ConfigUtils.setSwitchConfig(this@MainActivity, "is_add_defcode", true)
+
+        }
         db = CodeDatabase.getDatabase(this@MainActivity)
         initService()
         initKds()
         initDb()
-        
+        val intent = Intent(this,MIUIDesktopProductWidgetConfigureActivity::class.java)
+        Log.d("intent",Uri.parse(intent.toUri(0)).toString())
+
+
     }
     val isKeyDelete = mutableStateOf(false)
     val isKeyEdit = mutableStateOf(false)
@@ -472,15 +539,10 @@ private val totalTickets = mutableStateOf(0)
     @OptIn(ExperimentalMaterial3Api::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+
         enableEdgeToEdge(
-            statusBarStyle = SystemBarStyle.auto(
-                android.graphics.Color.TRANSPARENT,
-                android.graphics.Color.TRANSPARENT,
-            ) {false}, //这里的��思是是否需要检测深色主题模式，我们使用自己的背景，所以不需要直接设置为false,下面也是一样的
-            navigationBarStyle = SystemBarStyle.auto(
-                android.graphics.Color.TRANSPARENT,
-                android.graphics.Color.TRANSPARENT,
-            ) { false},
+
         )
         loadCategories()
         setContent {
@@ -529,77 +591,103 @@ private val totalTickets = mutableStateOf(0)
                         )
                     },
                     bottomBar = {
-                        Box(
-                            modifier = Modifier.clip(RoundedCornerShape(30.dp))
-                                .padding(start = 20.dp, end = 20.dp, bottom = 20.dp).shadow(2.dp)
-                        ) {
-                            // 模糊背景层
-                            Box(
-                                modifier = Modifier
-                                    .matchParentSize().background(
-                                        getDarkModeBackgroundColor(
-                                            context = this@MainActivity,
-                                            level = 1
+
+                                // 导航栏
+                                NavigationBar(
+                                    modifier = Modifier
+                                        .fillMaxWidth().height(100.dp)
+                                        .padding(
+                                            bottom = 20.dp,
+                                            start = 15.dp,
+                                            end = 15.dp
                                         )
-                                    )
-                                    .clip(RoundedCornerShape(30.dp))
-                                    .blur(radius = 30.dp)
-                            )
-                            
-                            // 导航栏
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth().background(
-                                        Color.Transparent
-                                    )
-                                    .clip(RoundedCornerShape(30.dp)),
-                                horizontalArrangement = Arrangement.SpaceAround,
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                MyNavigationBarItem(
-                                    context = this@MainActivity,
-                                    icon =Icons.Default.Home,
-                                    text = "首页",
-                                    selected = current_home_page.value == 0,
-                                    onClick = {
-                                        current_home_page.value = 0
-                                        initDb()
+                                        .clip(RoundedCornerShape(30.dp)),
+
+                                    ) {
+                                    Row(
+                                        modifier = Modifier
+                                            .fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.SpaceAround,
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        NavigationBarItem(
+                                            alwaysShowLabel = false,
+
+                                            icon = {
+                                                Icon(
+                                                    imageVector = Icons.Default.Home,
+                                                    contentDescription = "Home"
+                                                )
+                                            },
+                                            label = {
+                                                Text("首页")
+                                            },
+                                            selected = current_home_page.value == 0,
+                                            onClick = {
+                                                current_home_page.value = 0
+                                                initDb()
+                                            }
+                                        )
+                                        NavigationBarItem(
+                                            alwaysShowLabel = false,
+
+                                            icon = {
+                                                Icon(
+                                                    imageVector = Icons.Default.List,
+                                                    contentDescription = "List"
+                                                )
+                                            },
+                                            label = {
+                                                Text("更多")
+                                            },
+                                            selected = current_home_page.value == 1,
+                                            onClick = {
+                                                current_home_page.value = 1
+                                                initDb()
+                                            }
+                                        )
+                                        NavigationBarItem(
+                                            alwaysShowLabel = false,
+
+                                            icon = {
+                                                Icon(
+                                                    imageVector = Icons.Default.DateRange,
+                                                    contentDescription = "DateRange"
+                                                )
+                                            },
+                                            label = {
+                                                Text("概览")
+                                            },
+                                            selected = current_home_page.value == 2,
+                                            onClick = {
+                                                current_home_page.value = 2
+                                                initDb()
+                                            }
+                                        )
+                                        NavigationBarItem(
+                                            alwaysShowLabel = false,
+
+                                            icon = {
+                                                Icon(
+                                                    imageVector = Icons.Default.Settings,
+                                                    contentDescription = "Settings"
+                                                )
+                                            },
+                                            label = {
+                                                Text("设置")
+                                            },
+                                            selected = current_home_page.value == 3,
+                                            onClick = {
+                                                current_home_page.value = 3
+                                                initDb()
+                                            }
+                                        )
                                     }
-                                )
-                                MyNavigationBarItem(
-                                    context = this@MainActivity,
-                                    icon = Icons.Default.List,
-                                    text = "更多",
-                                    selected = current_home_page.value == 1,
-                                    onClick = {
-                                        current_home_page.value = 1
-                                        initDb()
-                                    }
-                                )
-                                MyNavigationBarItem(
-                                    context = this@MainActivity,
-                                    icon = Icons.Default.DateRange,
-                                    text = "总览",
-                                    selected = current_home_page.value == 2,
-                                    onClick = {
-                                        current_home_page.value = 2
-                                        initDb()
-                                    }
-                                )
-                                MyNavigationBarItem(
-                                    context = this@MainActivity,
-                                    icon = Icons.Default.Settings,
-                                    text = "设置",
-                                    selected = current_home_page.value == 3,
-                                    onClick = {
-                                        current_home_page.value = 3
-                                        initDb()
-                                    }
-                                )
 
 
-                            }
-                        }
+
+                                }
+
                     },
                     floatingActionButton = {
                         AnimatedVisibility(visible = current_home_page.value==0) {

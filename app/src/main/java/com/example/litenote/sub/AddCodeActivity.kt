@@ -65,6 +65,7 @@ import com.example.litenote.entity.Express
 import com.example.litenote.entity.PostStation
 import com.example.litenote.sub.ui.theme.LiteNoteTheme
 import com.example.litenote.utils.ConfigUtils
+import com.example.litenote.utils.DeviceUtils
 import com.example.litenote.utils.PickupCodeUtils
 import com.example.litenote.utils.getDarkModeBackgroundColor
 import com.example.litenote.utils.getDarkModeTextColor
@@ -252,53 +253,75 @@ class AddCodeActivity : ComponentActivity() {
             val responseData = response.body?.string()
             if (responseData != null) {
                 Log.d("LoginActivity", responseData)
-                val jsonObject = Gson().fromJson(responseData, ServerResponse::class.java)
-                val code = jsonObject.code
-                if (code == 200){
-                    try {
-                        val data = jsonObject.data
-                        if (data != null){
-                            yz.value = data.yz.toString()
-                            company.value = data.kd.toString()
-                            have_kd.value = true
-                            have_yz.value = true
-                            havetrue.value = true
-                            yz_local.value = data.local.toString()
-                            codes.addAll(data.code)
-                            ExpressDao.insert(
-                                this@AddCodeActivity,
-                                Express(
-                                    0,
-                                    company.value.replace("快递",""),
+                try {
+                    val jsonObject = Gson().fromJson(responseData, ServerResponse::class.java)
+                    val code = jsonObject.code
+                    if (code == 200) {
+                        try {
+                            val data = jsonObject.data
+                            if (data != null) {
+                                yz.value = data.yz.toString()
+                                company.value = data.kd.toString()
+                                have_kd.value = true
+                                have_yz.value = true
+                                havetrue.value = true
+                                yz_local.value = data.local.toString()
+                                codes.addAll(data.code)
+                                ExpressDao.insert(
+                                    this@AddCodeActivity,
+                                    Express(
+                                        0,
+                                        company.value.replace("快递", ""),
+                                    )
                                 )
-                            )
-                            PortDao.insert(
-                                this@AddCodeActivity,
-                                PostStation(
-                                    0,
-                                    yz.value,
-                                    yz_local.value,
-                                    System.currentTimeMillis(),
+                                PortDao.insert(
+                                    this@AddCodeActivity,
+                                    PostStation(
+                                        0,
+                                        yz.value,
+                                        yz_local.value,
+                                        System.currentTimeMillis(),
+                                    )
                                 )
+                                runOnUiThread {
+                                    Toast.makeText(
+                                        this@AddCodeActivity,
+                                        resources.getString(R.string.msg_is_pickup_code),
+                                        Toast.LENGTH_SHORT
+                                    ).show()
+                                    is_loading.value = false
+                                }
+                            }
+                        } catch (e: Exception) {
+                            Log.d("LoginActivity", e.message.toString())
+                            LogDBUtils.insertLog(
+                                this@AddCodeActivity,
+                                tag = "AddCodeActivity",
+                                title = e.cause.toString(),
+                                detail = e.message.toString()
                             )
                             runOnUiThread {
-                                Toast.makeText(
-                                    this@AddCodeActivity,
-                                    resources.getString(R.string.msg_is_pickup_code),Toast.LENGTH_SHORT
-                                ).show()
+                                base_model(string)
                                 is_loading.value = false
                             }
-                        }
-                    }catch (e: Exception){
-                        Log.d("LoginActivity", e.message.toString())
-                        runOnUiThread {
-                            base_model(string)
-                            is_loading.value = false
-                        }
-                    }
 
+                        }
+
+                    }
+                    Log.d("LoginActivity", "$code")
+                }catch (e:Exception){
+                    Log.d("LoginActivity", e.message.toString())
+                    LogDBUtils.insertLog(
+                        this@AddCodeActivity,
+                        tag = "AddCodeActivity",
+                        title = e.cause.toString(),
+                        detail = e.message.toString()
+                    )
+                    runOnUiThread {
+                        base_model(string)
+                        is_loading.value = false
+                    }
                 }
-                Log.d("LoginActivity", "$code")
 
             }
         }
@@ -409,7 +432,7 @@ class AddCodeActivity : ComponentActivity() {
                                 .fillMaxWidth()
                                 .height(200.dp))
                         Text(text = resources.getString(R.string.llm_based_infos),
-                            modifier = Modifier
+                            modifier = Modifier.padding(10.dp)
                                 .fillMaxWidth()
                                 .padding(5.dp),
                             color = getDarkModeTextColor(context = this@AddCodeActivity),
@@ -746,6 +769,11 @@ class AddCodeActivity : ComponentActivity() {
                                                 this@AddCodeActivity,
                                                 resources.getString(R.string.add_success),Toast.LENGTH_SHORT
                                             ).show()
+                                            val device = DeviceUtils.getConnectedDevices(this@AddCodeActivity)
+                                            Log.d("MessageReciever", device)
+                                            if (device!=""){
+                                                DeviceUtils.sendMessage(this@AddCodeActivity,device, codes = codes, yzStr, kdStr)
+                                            }
                                             finish()
                                         } catch (e: Exception) {
                                             Toast.makeText(

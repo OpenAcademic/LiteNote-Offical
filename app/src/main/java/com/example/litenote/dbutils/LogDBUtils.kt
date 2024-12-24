@@ -43,7 +43,7 @@ object LogDBUtils {
         val logDao = db.log()
         return logDao.getCount()
     }
-    fun getLog(context: Context, page: Int, pageSize: Int): MutableList<Logbean> {
+    fun getLogs(context: Context, page: Int, pageSize: Int): MutableList<Logbean> {
         // val logDao = AppDatabase.getInstance(context).logDao()
         // return logDao.getAll(page, pageSize)
         val  db = CodeDatabase.getDatabase(context)

@@ -181,13 +181,14 @@ fun CodeFormatCard(
 @Composable
 fun FormatPage(
     context: Context,
+    modifier: Modifier = Modifier,
     formatsNum : Int = 0,
     formats : List<CodeFormat> = mutableListOf(),
     reflesh:() -> Unit
 ) {
     val showDialog = remember { mutableStateOf(false) }
     val deleteID = remember { mutableStateOf(0L) }
-            Scaffold(modifier = Modifier.fillMaxSize(),
+            Scaffold(modifier = modifier.fillMaxSize(),
                 floatingActionButton = {
                     IconButton(
                         onClick = {

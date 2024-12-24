@@ -71,33 +71,6 @@ object PickupCodeUtils {
 
         val allList = mutableListOf<String>()
         var result = Regex("[0-9]{2,3}-[0-9]{1,2}-[0-9]{4}").findAll(code)
-        if (!isDisableDefault){
-            var reg1 = Regex("[0-9]{2,3}-[0-9]{1,2}-[0-9]{4}")
-            var reg2 = Regex("[A-Z]{1}[0-9]{4}")
-            var reg3 = Regex("[0-9]{3}-[0-9]{4}")
-
-            // 匹配获取reg1的取件码
-            result = reg1.findAll(code)
-            if (result.count() > 0) {
-                Log.d("PickupCodeUtils", "reg1 + ${result.toString()}")
-                // 将所有的取件码放入allList中
-                allList.addAll(result.map { it.value }.toList())
-            }
-
-            // 匹配获取reg2的取件码
-            result = reg2.findAll(code)
-            if (result.count() > 0) {
-                Log.d("PickupCodeUtils", "reg1 + ${result.toString()}")
-                allList.addAll(result.map { it.value }.toList())
-            }
-
-            // 匹配获取reg3的取件码
-            result = reg3.findAll(code)
-            if (result.count() > 0) {
-                Log.d("PickupCodeUtils", "reg1 + ${result.toString()}")
-                allList.addAll(result.map { it.value }.toList())
-            }
-        }
 
         var isOk = false
         var list :  List<String> = listOf()

@@ -31,6 +31,50 @@
         android:windowSoftInputMode="adjustResize"
         tools:targetApi="31">
         <activity
+            android:name=".LogDetailActivity"
+            android:exported="false"
+            android:label="@string/title_activity_log_detail"
+            android:theme="@style/Theme.LiteNote" />
+
+        <receiver
+            android:name=".desktopwidget.MIUIDesktopProductWidgetProvider"
+            android:exported="true"
+            android:label="@string/app_name_product"
+            android:process=":widgetProvider">
+            <meta-data
+                android:name="miuiWidgetRefresh"
+                android:value="exposure" />
+            <meta-data
+                android:name="miuiWidgetRefreshMinInterval"
+                android:value="20000" />
+            <meta-data
+                android:name="miuiWidget"
+                android:value="true" />
+
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+                <action android:name="miui.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/m_i_u_i_desktop_product_widget_info" />
+        </receiver>
+
+        <activity
+            android:name=".desktopwidget.MIUIDesktopProductWidgetConfigureActivity"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_CONFIGURE" />
+                <action android:name="android.intent.action.VIEW" />
+            </intent-filter>
+        </activity>
+        <activity
+            android:name=".HelpActivity2"
+            android:exported="false"
+            android:label="@string/title_activity_help2"
+            android:theme="@style/Theme.LiteNote" />
+        <activity
             android:name=".MoreActivity"
             android:exported="false"
             android:label="@string/title_activity_more"
@@ -68,11 +112,12 @@
 
         <meta-data
             android:name="miuiWidgetVersion"
-            android:value="1" />
+            android:value="2" />
 
         <receiver
-            android:name=".desktopwidget.MIUIWidgetProvider"
+            android:name=".desktopwidget.MIUIPickCodeWidgetProvider"
             android:exported="true"
+            android:label="@string/app_name"
             android:process=":widgetProvider">
             <meta-data
                 android:name="miuiWidgetRefresh"
@@ -126,7 +171,7 @@
             android:required="false" />
 
         <receiver
-            android:name=".desktopwidget.DesktopCodeMWidget"
+            android:name=".desktopwidget.DesktopCodeWidgetService"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />

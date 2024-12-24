@@ -136,17 +136,15 @@ class RuleActivity : ComponentActivity() {
                         }
                     },
                     modifier = Modifier
-                        .fillMaxSize()
-                        .padding(
-                            top = 40.dp
-                        )) { innerPadding ->
-                    Column(
-                        modifier = Modifier.padding(innerPadding)
-                    ) {
+                        .fillMaxSize()) { innerPadding ->
+
                         when (currTag.value) {
                             0 -> {
                                 FormatPage(
                                     context = this@RuleActivity,
+                                    modifier = Modifier
+                                        .fillMaxSize()
+                                        .padding(innerPadding),
                                     formats = formats,
                                     formatsNum = formatsNum.value,
                                 ){
@@ -158,6 +156,9 @@ class RuleActivity : ComponentActivity() {
                                 ExpressView(
                                     context = this@RuleActivity,
                                     formats = expresses,
+                                    modifier = Modifier
+                                        .fillMaxSize()
+                                        .padding(innerPadding),
                                     formatsNum = expressNum){
                                     initDB()
                                 }
@@ -166,13 +167,15 @@ class RuleActivity : ComponentActivity() {
                                 PortView(
                                     context = this@RuleActivity,
                                     formats = ports,
+                                    modifier = Modifier
+                                        .fillMaxSize()
+                                        .padding(innerPadding),
                                     formatsNum = portsNum){
                                     initDB()
                                 }
                             }
                         }
 
-                    }
 
                 }
             }

@@ -9,13 +9,17 @@ import android.content.Context
 import android.content.Intent
 import android.graphics.Canvas
 import android.graphics.Path
+import android.icu.text.Transliterator
 import android.util.Log
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -41,6 +45,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowForward
+import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
@@ -96,6 +101,37 @@ import com.example.litenote.utils.getDarkModeTextColor
 import com.example.litenote.utils.getProductTypeIcon
 import com.example.litenote.utils.timeStempToTime
 import com.example.litenote.utils.daysToYearDays
+import com.example.litenote.utils.timestr2ShowStr
+import com.lightspark.composeqr.QrCodeColors
+import com.lightspark.composeqr.QrCodeView
+import net.sourceforge.pinyin4j.PinyinHelper
+import net.sourceforge.pinyin4j.format.HanyuPinyinCaseType
+import net.sourceforge.pinyin4j.format.HanyuPinyinOutputFormat
+import net.sourceforge.pinyin4j.format.HanyuPinyinToneType
+import net.sourceforge.pinyin4j.format.HanyuPinyinVCharType
+import java.util.Locale
+
+fun convertToPinyin( chinese :String , size: HanyuPinyinCaseType = HanyuPinyinCaseType.UPPERCASE) : String {
+    if (chinese.isEmpty()) return "";
+    var newString = ""
+    var format =  HanyuPinyinOutputFormat();
+    format.setToneType(HanyuPinyinToneType.WITHOUT_TONE);
+    format.setVCharType(HanyuPinyinVCharType.WITH_U_UNICODE);
+    format.setCaseType(size);
+
+    chinese.toCharArray().forEach {
+        val pinyin = PinyinHelper.toHanyuPinyinStringArray(it,format)
+        if (pinyin != null) {
+            newString += pinyin.joinToString("")
+        }
+    }
+    var zhan = "ZHAN"
+
+    if (size == HanyuPinyinCaseType.LOWERCASE) zhan = "zhan"
+    else zhan = "ZHAN"
+
+    return newString+" " + zhan
+}
 
 @Composable
 fun TrainTicketCard(
@@ -104,117 +140,507 @@ fun TrainTicketCard(
     onEditTicket: () -> Unit = {}
 ) {
     var expanded = remember { mutableStateOf(false) }
-    val backgroundColor = if (ticket.ticketColor == TicketColor.RED) Color.Red.copy(alpha = 0.1f) else Color.Blue.copy(alpha = 0.1f)
+    val backgroundColor = if (ticket.ticketColor == TicketColor.RED)
+        Color.Red.copy(alpha = 0.1f) else Color(0xFFA9E8FF)
     val fontColor = if (ticket.ticketColor == TicketColor.RED) Color.Red else Color.Blue
+    var rotated = remember { mutableStateOf(false) }
 
-    Column(
+    val rotation = animateFloatAsState(
+        targetValue = if (rotated.value) 180f else 0f,
+        animationSpec = tween(500)
+    )
+    val animateFront = animateFloatAsState(
+        targetValue = if (!rotated.value) 1f else 0f,
+        animationSpec = tween(500)
+    )
+    val animateBack = animateFloatAsState(
+        targetValue = if (rotated.value) 1f else 0f,
+        animationSpec = tween(500)
+    )
+    androidx.compose.material3.Card(
         modifier = modifier
-            .fillMaxWidth()
-            .padding(vertical = 8.dp)
-            .background(color = backgroundColor, shape = MaterialTheme.shapes.medium)
-            .padding(16.dp)
+            .fillMaxWidth().padding(top = 5.dp)
+            .height(275.dp)
+            .graphicsLayer {
+                rotationY = rotation.value
+                cameraDistance = 8 * density
+            }
             .clickable {
-                expanded.value = !expanded.value
-            }
-    ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Column {
-                Text(
-                    text = ticket.departure,
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = fontColor
-                )
+                rotated.value = !rotated.value
+            },
 
-            }
-
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                modifier = Modifier
-                    .weight(1f)
-                    .padding(horizontal = 12.dp)
+        colors= CardDefaults.cardColors(
+            containerColor = if (!rotated.value) {if (
+                ticket.ticketColor == TicketColor.RED
             ) {
-                Text(
-                    text = ticket.trainNumber,
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = fontColor
-                )
-                Row(
+                Color.White
+            } else backgroundColor } else{ Color.Black},
+            contentColor = Color.Black.copy(alpha = 0.8f)
+
+        ),
+        shape = RoundedCornerShape(14.dp),) {
+        if (!rotated.value) {
+            if (ticket.ticketColor == TicketColor.BLUE) {
+                Column(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.Center,
-                    verticalAlignment = Alignment.CenterVertically
+                    verticalArrangement = Arrangement.SpaceBetween,
+                    horizontalAlignment = Alignment.CenterHorizontally
                 ) {
+                    Column(
+                        modifier = Modifier.padding(20.dp),
+                        horizontalAlignment = Alignment.Start
+                    ) {
+                        val text = remember {
+                            val text = "Q" + ticket.id.toString().padStart(7, '0')
+                            text
+                        }
+                        Text(text = text, fontSize = 20.sp, color = Color.Red.copy(0.6f))
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Column {
+                                Text(
+                                    text = ticket.departure + " 站",
+                                    fontSize = 30.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color.Black
+                                )
+                                // 转为拼音
 
-                    Icon(
-                        imageVector = Icons.Default.ArrowForward,
-                        contentDescription = "到",
-                        tint = fontColor.copy(alpha = 0.6f),
+                                Text(
+                                    text = convertToPinyin(ticket.departure),
+                                    fontSize = 14.sp,
+                                    color = Color.Black
+                                )
+
+
+                            }
+
+                            Column(
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                modifier = Modifier
+                                    .weight(1f)
+                            ) {
+                                Text(
+                                    text = ticket.trainNumber,
+                                    fontSize = 16.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color.Black
+                                )
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.Center,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+
+                                    Icon(
+                                        imageVector = Icons.Default.ArrowForward,
+                                        contentDescription = "到",
+                                        tint = Color.Black,
+                                        modifier = Modifier
+                                    )
+
+
+                                }
+
+                            }
+
+                            Column(
+                                horizontalAlignment = Alignment.End
+                            ) {
+                                Text(
+                                    text = ticket.arrival + " 站",
+                                    fontSize = 30.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color.Black
+                                )
+                                // 转为拼音
+                                Text(
+                                    text = convertToPinyin(ticket.arrival),
+                                    fontSize = 14.sp,
+                                    color = Color.Black
+                                )
+
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(12.dp))
+                        Text(
+                            text = timestr2ShowStr(ticket.departureTime),
+
+                            )
+                        Text(
+                            text = "到站: ${timeStempToTime(ticket.arrivalTime, 9)}",
+                            fontSize = 14.sp,
+                            color = Color.Black
+                        )
+                        if (ticket.trainType != null) {
+                            Text(
+                                text = ticket.trainType,
+                                fontSize = 14.sp,
+                                color = fontColor.copy(alpha = 0.6f)
+                            )
+                        }
+
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.Bottom
+                        ) {
+                            Column(
+                                modifier = Modifier.fillMaxWidth(0.5f),
+                                horizontalAlignment = Alignment.Start,
+                                verticalArrangement = Arrangement.Center
+                            ) {
+                                Text(
+                                    text = if (ticket.passenger.isNotEmpty()) {
+                                        "乘车人: ${ticket.passenger}"
+                                    } else {
+                                        "无乘车人信息"
+                                    },
+                                    fontSize = 18.sp,
+                                    color = Color.Black,
+                                    fontWeight = FontWeight.Bold
+
+                                )
+                                Column(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(
+                                            start = 20.dp
+                                        )
+                                        .border(
+                                            1.dp,
+                                            color = Color.Black.copy(alpha = 0.6f)
+                                        ),
+                                    horizontalAlignment = Alignment.CenterHorizontally,
+                                    verticalArrangement = Arrangement.Center
+                                ) {
+                                    Text(
+                                        text = "轻记火车票收藏",
+                                        fontSize = 14.sp,
+                                        color = Color.Black,
+                                    )
+                                    Text(
+                                        text = "仅供收藏使用",
+                                        fontSize = 14.sp,
+                                        color = Color.Black,
+
+                                        )
+
+                                }
+                            }
+
+                            QrCodeView(
+                                data = "https://oac.ac.cn",
+                                colors = QrCodeColors(
+                                    background = backgroundColor,
+                                    foreground = Color.Black
+                                ),
+                                modifier = Modifier
+                                    .size(50.dp)
+                                    .background(
+                                        color = backgroundColor
+                                    )
+                            )
+
+                        }
+                    }
+                    Column(
                         modifier = Modifier
-                            .padding(horizontal = 4.dp)
-                            .width(80.dp)
-                    )
+                            .height(40.dp)
+                            .background(
+                                color = if (ticket.ticketColor == TicketColor.RED) {
+                                    Color.Red.copy(alpha = 0.2f)
+                                } else {
+                                    Color(0xFF63C9E5)
+                                },
+                            )
+                    ) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            var text = remember {
+                                // 随机 32 位数字
+                                var text = ""
+                                for (i in 0..16) {
+                                    text += (Math.random() * 10).toInt().toString()
+                                }
+                                text
+                            }
+                            Text(
+                                text = text,
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.Black,
+                                modifier = Modifier
+                                    .padding(
+                                        start = 10.dp,
+                                        end = 10.dp,
+                                    )
+                            )
+                            IconButton(
+                                modifier = Modifier.width(80.dp),
+                                onClick = onEditTicket
+                            ) {
+                                Row {
+                                    Text(
+                                        text = "编辑",
+                                        fontSize = 16.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = Color.Black,
+                                        modifier = Modifier
+                                            .padding(
+                                                start = 10.dp,
+                                                end = 10.dp,
+                                            )
+
+                                    )
+                                }
+                            }
+                        }
+
+
+                    }
+                }
+            } else {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(
+                            20.dp
+                        )
+                        .background(
+                            color = backgroundColor,
+                            shape = RoundedCornerShape(
+                                15.dp
+                            )
+                        ),
+                    verticalArrangement = Arrangement.SpaceBetween,
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Column(
+                        modifier = Modifier.padding(20.dp),
+                        horizontalAlignment = Alignment.Start
+                    ) {
+                        val text = remember {
+                            val text = "Q" + ticket.id.toString().padStart(7, '0')
+                            text
+                        }
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(text = text, fontSize = 20.sp, color = Color.Red.copy(0.6f))
+                            if (ticket.trainType != null) {
+                                Text(
+                                    text = ticket.trainType,
+                                    fontSize = 14.sp,
+                                    color = fontColor.copy(alpha = 0.6f)
+                                )
+                            }
+                        }
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Column(
+                                horizontalAlignment = Alignment.CenterHorizontally,
+
+                            ) {
+                                Text(
+                                    text = ticket.departure,
+                                    fontSize = 30.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color.Black
+                                )
+                                // 转为拼音
+
+                                Text(
+                                    text = convertToPinyin(ticket.departure,HanyuPinyinCaseType.LOWERCASE),
+                                    fontSize = 14.sp,
+                                    color = Color.Black
+                                )
+
+
+                            }
+
+                            Column(
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                modifier = Modifier
+                                    .weight(1f)
+                            ) {
+                                Text(
+                                    text = ticket.trainNumber + " 站",
+                                    fontSize = 16.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color.Black
+                                )
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.Center,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+
+                                    Icon(
+                                        imageVector = Icons.Default.ArrowForward,
+                                        contentDescription = "到",
+                                        tint = Color.Black,
+                                        modifier = Modifier
+                                    )
+
+
+                                }
+
+                            }
+
+                            Column(
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                            ) {
+                                Text(
+                                    text = ticket.arrival + " 站",
+                                    fontSize = 30.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color.Black
+                                )
+                                // 转为拼音
+                                Text(
+                                    text = convertToPinyin(ticket.arrival,HanyuPinyinCaseType.LOWERCASE),
+                                    fontSize = 14.sp,
+                                    color = Color.Black
+                                )
+
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(12.dp))
+                        Text(
+                            text = timestr2ShowStr(ticket.departureTime),
+
+                            )
+                        Text(
+                            text = "到站: ${timeStempToTime(ticket.arrivalTime, 9)}",
+                            fontSize = 14.sp,
+                            color = Color.Black
+                        )
+
+
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.Bottom
+                        ) {
+                            Column(
+                                modifier = Modifier.fillMaxWidth(0.5f),
+                                horizontalAlignment = Alignment.Start,
+                                verticalArrangement = Arrangement.Center
+                            ) {
+                                Text(
+                                    text = if (ticket.passenger.isNotEmpty()) {
+                                        "乘车人: ${ticket.passenger}"
+                                    } else {
+                                        "无乘车人信息"
+                                    },
+                                    fontSize = 18.sp,
+                                    color = Color.Black,
+                                    fontWeight = FontWeight.Bold
+
+                                )
+                                TextButton(
+                                    onClick = onEditTicket,
+                                    modifier = Modifier
+
+                                       ,
+
+                                ) {
+                                    Text(
+                                        text = "轻记火车票收藏\n(点击编辑)",
+                                        fontSize = 14.sp,
+                                        color = Color.Black,
+                                    )
+
+
+                                }
+                            }
+
+                            QrCodeView(
+                                data = "https://oac.ac.cn",
+                                colors = QrCodeColors(
+                                    background = Color.White,
+                                    foreground = Color.Black
+                                ),
+                                modifier = Modifier
+                                    .size(80.dp)
+                                    .background(
+                                        color = backgroundColor
+                                    )
+                            )
+
+                        }
+                    }
 
                 }
-                if (ticket.trainType != null) {
-                    Text(
-                        text = ticket.trainType,
-                        fontSize = 14.sp,
-                        color = fontColor.copy(alpha = 0.6f)
-                    )
-                }
+
             }
 
+        } else {
             Column(
-                horizontalAlignment = Alignment.End
-            ) {
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(
+                        start = 20.dp,
+                        end = 20.dp,
+                        top = 20.dp,
+                        bottom = 20.dp
+                    ),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
+            ){
                 Text(
-                    text = ticket.arrival,
-                    fontSize = 18.sp,
+                    text = "收藏须知",
+                    fontSize = 25.sp,
                     fontWeight = FontWeight.Bold,
-                    color = fontColor
+                    color = Color.White,
+                    modifier = Modifier.graphicsLayer {
+                        alpha = animateBack.value
+                        rotationY = rotation.value
+                    },
+                    textAlign = TextAlign.Center)
+                Text(
+                    text = "1. 本应用仅供学习使用, 不得用于任何商业用途",
+                    fontSize = 20.sp,
+                    color = Color.White,
+                    modifier = Modifier.graphicsLayer {
+                        alpha = animateBack.value
+                        rotationY = rotation.value
+                    },
+                )
+                Text(
+                    text = "2. 收藏的火车票信息仅供参考, 如有异常请及时联系作者",
+                    fontSize = 20.sp,
+                    color = Color.White,
+                    modifier = Modifier.graphicsLayer {
+                        alpha = animateBack.value
+                        rotationY = rotation.value
+                    },
                 )
 
+
+
             }
+
         }
 
-        Spacer(modifier = Modifier.height(12.dp))
-        Text(
-                text = "发车: ${timeStempToTime(ticket.departureTime, 9)}",
-                fontSize = 14.sp,
-                color = fontColor.copy(alpha = 0.6f)
-            )
-            Text(
-                text = "到站: ${timeStempToTime(ticket.arrivalTime, 9)}",
-                fontSize = 14.sp,
-                color = fontColor.copy(alpha = 0.6f)
-            )
-        Text(
-            text = "乘车人: ${ticket.passenger}",
-            fontSize = 14.sp,
-            color = fontColor.copy(alpha = 0.6f)
-        )
 
-        if (expanded.value) {
-            Divider(modifier = Modifier.padding(vertical = 8.dp))
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.End
-            ) {
-                IconButton(onClick = onEditTicket) {
-                    Icon(
-                        imageVector = Icons.Default.Edit,
-                        contentDescription = "编辑",
-                        tint = fontColor
-                    )
-                }
-            }
-        }
+
     }
+
 }
 @Composable
 fun RotationCard(
@@ -604,6 +1030,155 @@ fun ProductCard(
     }
 }
 
+
+@Composable
+fun ProductCard2(
+    context: Context,
+    product: Product,
+    fontColor: Color,
+    backgroundColor: Color,
+    maintenances: List<ProductMaintenance>,
+    onClick: (id:Int) -> Unit = {}
+) {
+    // 计算维护费用总和
+    val maintenanceTotalCost = remember(maintenances) {
+        mutableStateOf(maintenances.sumOf { it.cost })
+    }
+
+    // 计算初始购买价格
+    val initialCost = remember(product.totalCost, maintenanceTotalCost.value) {
+        mutableStateOf(product.totalCost - maintenanceTotalCost.value)
+    }
+
+    // 计算总花费（包括维护费用）
+    val totalSpent = remember(product, maintenances) {
+        mutableStateOf(product.totalCost + maintenances.sumOf { it.cost })
+    }
+
+    // 计算进
+    val passedDays = remember(product.buyTime) {
+        mutableStateOf(((System.currentTimeMillis() - product.buyTime) / (1000 * 60 * 60 * 24)).toInt())
+    }
+
+    val totalDays = remember(totalSpent.value, product.estimatedCost) {
+        mutableStateOf((totalSpent.value / product.estimatedCost).toInt())
+    }
+
+    val remainingDays = remember(totalDays.value, passedDays.value) {
+        mutableStateOf(totalDays.value - passedDays.value)
+    }
+
+    val progress = remember(passedDays.value, totalDays.value) {
+        mutableStateOf((passedDays.value.toFloat() / totalDays.value).coerceIn(0f, 1f))
+    }
+
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(10.dp)
+            .background(color = backgroundColor, shape = MaterialTheme.shapes.medium)
+            .padding(15.dp)
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    painter = getProductTypeIcon(product.type),
+                    contentDescription = product.type,
+                    tint = fontColor,
+                    modifier = Modifier.size(24.dp)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = product.name,
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = fontColor
+                )
+            }
+            IconButton(onClick = {
+                onClick(product.id)
+            }) {
+                Icon(
+                    imageVector =   Icons.Default.CheckCircle,
+                    contentDescription ="选中",
+                    tint = fontColor
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.height(10.dp))
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column {
+                Text(
+                    text = "总成本: ¥${product.totalCost}",
+                    fontSize = 16.sp,
+                    color = fontColor
+                )
+                Text(
+                    text = "预估成本: ¥${product.estimatedCost}/天",
+                    fontSize = 16.sp,
+                    color = fontColor
+                )
+                Text(
+                    text = "购买日期: ${com.example.litenote.utils.timeStempToTime(product.buyTime, 9)}",
+                    fontSize = 14.sp,
+                    color = fontColor.copy(alpha = 0.6f)
+                )
+            }
+
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text(
+                    text = daysToYearDays(totalDays.value),
+                    color = fontColor,
+                    fontSize = 14.sp,
+                    modifier = Modifier.padding(end = 8.dp)
+                )
+
+                Box(
+                    contentAlignment = Alignment.Center,
+                    modifier = Modifier.size(60.dp)
+                ) {
+                    CircularProgressIndicator(
+                        progress = progress.value,
+                        modifier = Modifier.fillMaxSize(),
+                        color = when {
+                            remainingDays.value > 100 -> Color.Red
+                            remainingDays.value <= 100 -> Color(0xFFFF9800)
+                            else -> MaterialTheme.colorScheme.primary
+                        },
+                        trackColor = Color(0xFFE0E0E0),
+                        strokeWidth = 8.dp
+                    )
+                }
+
+                Text(
+                    text = "" +
+                            "${(progress.value * 100).toInt()}%",
+                    fontSize = 10.sp,
+                    color = fontColor.copy(alpha = 0.6f),
+                    modifier = Modifier.padding(top = 4.dp)
+                )
+            }
+        }
+
+    }
+}
+
+
 @Composable
 private fun MaintenanceTimeline(
     maintenances: List<ProductMaintenance>,
@@ -754,6 +1329,45 @@ fun ProductList(
 }
 
 @Composable
+fun ProductList2(
+    context: Context,
+    products: List<Product>,
+    maintenanceMap: Map<Int, List<ProductMaintenance>>,
+    onClick: (id:Int) -> Unit
+) {
+    Box(modifier = Modifier.fillMaxSize()) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(10.dp)
+        ) {
+            if(products.isEmpty()) {
+                EmptyView(fontColor = getDarkModeTextColor(context))
+            } else {
+                Column(
+                    modifier = Modifier.verticalScroll(rememberScrollState())
+                ) {
+                    products.forEach { product ->
+                        ProductCard2(
+                            context = context,
+                            product = product,
+                            fontColor = getDarkModeTextColor(context),
+                            backgroundColor = getDarkModeBackgroundColor(context, 1),
+                            maintenances = maintenanceMap[product.id] ?: emptyList(),
+                            onClick = { id: Int ->
+                                onClick(id)
+                            }
+                        )
+                    }
+                }
+            }
+        }
+
+
+    }
+}
+
+@Composable
 fun ProductPages(
     context: Context,
     maintenanceMap: Map<Int, List<ProductMaintenance>>,
@@ -816,7 +1430,7 @@ fun ProductPages(
                 .background(Color.Black.copy(alpha = 0.5f))
                 .blur(
                     radius = 70.dp,
-                    edgeTreatment = BlurredEdgeTreatment. Unbounded
+                    edgeTreatment = BlurredEdgeTreatment.Unbounded
                 )
                 .clickable { selectedType.value = null }
         )

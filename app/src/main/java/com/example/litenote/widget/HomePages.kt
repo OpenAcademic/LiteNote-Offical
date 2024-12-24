@@ -8,6 +8,7 @@ package  com.example.litenote.widget
 
 import android.annotation.SuppressLint
 import android.content.Context
+import android.content.Intent
 import android.util.Log
 import android.widget.Toast
 import androidx.compose.animation.AnimatedVisibility
@@ -35,6 +36,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowForward
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material3.FilterChip
@@ -65,6 +67,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
+import com.example.litenote.HelpActivity2
 import com.example.litenote.R
 import com.example.litenote.dbutils.CodeDBUtils
 import com.example.litenote.entity.CItem
@@ -304,6 +307,9 @@ fun HomePages(
     val homeStyle = remember {
         mutableStateOf(ConfigUtils.checkHomeStyleConfig(context,"home_style"))
     }
+    val hidden_help = remember {
+        mutableStateOf(ConfigUtils.checkSwitchConfig(context,"hidden_help"))
+    }
 
     Column(
         modifier = if (homeStyle.value == HomeStyle.LIST)
@@ -327,35 +333,56 @@ fun HomePages(
         horizontalAlignment = Alignment.Start,
         verticalArrangement = Arrangement.Top
     ) {
-        TextButton(
-            onClick = {
-                Toast.makeText(context, resources.getString(
-                    R.string.demo_ts
-                ), Toast.LENGTH_SHORT).show()
-            },
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(
-                    getDarkModeBackgroundColor(context = context, level = 1),
-                    shape = RoundedCornerShape(25.dp)
+        AnimatedVisibility(visible = !hidden_help.value) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(
+                        getDarkModeBackgroundColor(context = context, level = 1),
+                        shape = RoundedCornerShape(25.dp)
+                    )
+                    .padding(
+                        2.dp
+                    ),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "不能自动读取？查看帮助",
+                    color = getDarkModeTextColor(context = context),
+                    fontSize = 15.sp,
+                    modifier = Modifier.fillMaxWidth(0.9f)
+                        .clickable {
+                            context.startActivity(
+                                Intent(context, HelpActivity2::class.java)
+                            )
+                        },
+                    fontWeight = androidx.compose.ui.text.font.FontWeight.Bold
                 )
-                .padding(
-                    2.dp
-                )
-        ) {
-            MarqueeText(
-                text = resources.getString(
-                    R.string.ts
-                ),
-                color = getDarkModeTextColor(context = context),
-                fontSize = 15.sp,
-                modifier = Modifier.fillMaxWidth(),
-                fontWeight = androidx.compose.ui.text.font.FontWeight.Bold
+                TextButton(
+                    modifier = Modifier.fillMaxWidth().background(
+                        getDarkModeBackgroundColor(context = context, level = 2),
+                        shape = RoundedCornerShape(25.dp)
+                    ),
+                    onClick = {
+                    ConfigUtils.setSwitchConfig(
+                        context,
+                        "hidden_help",
+                        true
+                    )
+                    hidden_help.value = true
+                }) {
+                    Icon(imageVector = Icons.Default.Clear,
+                        contentDescription = "Clear",
+                        tint = getDarkModeTextColor(context),
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
 
-            )
 
-
+            }
         }
+
         HomeStatus(context, currTag, resources) {
             onTagChange(it)
         }

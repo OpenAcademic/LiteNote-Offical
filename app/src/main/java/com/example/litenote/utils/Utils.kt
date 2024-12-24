@@ -28,6 +28,12 @@ import okhttp3.Request
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.withStyle
+import androidx.compose.ui.unit.sp
 import java.text.SimpleDateFormat
 fun getApplicationStatus(
     context: Context
@@ -55,6 +61,57 @@ fun getApplicationAgentStatus(
     return  sharePref.getBoolean("agent", false)
 }
 
+fun timestr2ShowStr(timest: Long): AnnotatedString {
+    val sdf = SimpleDateFormat("yyyy-MM-dd-HH-mm");
+    val dateStr = sdf.format(java.util.Date(timest).time);
+    val strs = dateStr.split("-")
+    return  buildAnnotatedString {
+
+        withStyle(style = SpanStyle(fontWeight = FontWeight.Bold,
+            color = Color.Black, fontSize = 20.sp)) {
+            append(strs[0])
+        }
+        withStyle(style = SpanStyle(fontWeight = FontWeight.Bold,
+            color = Color.Black, fontSize = 16.sp)) {
+            append("年")
+        }
+        withStyle(style = SpanStyle(fontWeight = FontWeight.Bold,
+            color = Color.Black, fontSize = 20.sp)) {
+            append(strs[1])
+        }
+        withStyle(style = SpanStyle(fontWeight = FontWeight.Bold,
+            color = Color.Black, fontSize = 16.sp)) {
+            append("月")
+        }
+        withStyle(style = SpanStyle(fontWeight = FontWeight.Bold,
+            color = Color.Black, fontSize = 20.sp)) {
+            append(strs[2])
+        }
+        withStyle(style = SpanStyle(fontWeight = FontWeight.Bold,
+            color = Color.Black, fontSize = 16.sp)) {
+            append("日")
+        }
+        withStyle(style = SpanStyle(fontWeight = FontWeight.Bold,
+            color = Color.Black, fontSize = 20.sp)) {
+            append(strs[3])
+        }
+        withStyle(style = SpanStyle(fontWeight = FontWeight.Bold,
+            color = Color.Black, fontSize = 16.sp)) {
+            append(":")
+        }
+        withStyle(style = SpanStyle(fontWeight = FontWeight.Bold,
+            color = Color.Black, fontSize = 20.sp)) {
+            append(strs[4])
+        }
+        withStyle(style = SpanStyle(fontWeight = FontWeight.Bold,
+            color = Color.Black, fontSize = 18.sp)) {
+            append("开")
+        }
+
+
+
+    }
+}
 
 @SuppressLint("SimpleDateFormat")
 fun timeStempToTime(timest: Long,mode:Int): String {
@@ -72,7 +129,9 @@ fun timeStempToTime(timest: Long,mode:Int): String {
         val sdf =  SimpleDateFormat("yyyy");
         val dateStr = sdf.format(java.util.Date(timest).time);
         return dateStr;
-    }else{
+    }
+
+    else{
         val sdf =  SimpleDateFormat("yyyy-MM-dd HH:mm");
         val dateStr = sdf.format(java.util.Date(timest).time);
         return dateStr;

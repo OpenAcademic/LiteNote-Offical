@@ -12,14 +12,14 @@ import android.appwidget.AppWidgetProvider
 import android.content.Context
 import android.content.Intent
 import android.widget.RemoteViews
-import com.example.litenote.MainActivity
+import com.example.litenote.MoreActivity
 import com.example.litenote.R
 import com.example.litenote.dbutils.CodeDBUtils
 
 /**
  * Implementation of App Widget functionality.
  */
-class MIUIWidgetProvider : AppWidgetProvider() {
+class MIUIPickCodeWidgetProvider : AppWidgetProvider() {
     override fun onUpdate(
         context: Context,
         appWidgetManager: AppWidgetManager,
@@ -78,13 +78,14 @@ internal fun updateAppWidget(
     val views = RemoteViews(context.packageName, R.layout.m_i_u_i_widget_provider)
     views.setTextViewText(R.id.sum_num, CodeDBUtils.getNum(context).toString())
     views.setOnClickPendingIntent(
-        R.id.back,
+        R.id.widget_content,
         PendingIntent.getActivities(
             context,
             0,
-            arrayOf(Intent(context, MainActivity::class.java).apply {
+            arrayOf(Intent(context, MoreActivity::class.java).apply {
                 action = "miui.appwidget.action.APPWIDGET_UPDATE"
                 putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, intArrayOf(appWidgetId))
+                putExtra("tag", 1)
             }),
             PendingIntent.FLAG_IMMUTABLE
         )

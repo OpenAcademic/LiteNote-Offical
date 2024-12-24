@@ -108,7 +108,7 @@ fun TrainTicketList(
     // 对车票进行分组
     var groupedTickets = run {
         val q = if (currentGroupBy.value == GroupBy.NONE) {
-            null
+            tickets.groupBy { it.id / 10 }
         } else {
             tickets.groupBy { ticket ->
                 when (currentGroupBy.value) {
@@ -118,7 +118,8 @@ fun TrainTicketList(
                     GroupBy.TRAVEL_DATE -> timeStempToTime(ticket.travelDate, 1)
                     GroupBy.TRAIN_NUMBER -> ticket.trainNumber
                     GroupBy.PASSENGER -> ticket.passenger
-                    else -> null
+                    GroupBy.NONE -> ticket.id / 10
+                    else -> (ticket.id / 10)
                 }
             }
         }
@@ -148,7 +149,7 @@ fun TrainTicketList(
                     label = {
                         Text(
                             text = when(currentGroupBy.value) {
-                                GroupBy.NONE -> "未分组"
+                                GroupBy.NONE -> "无分组"
                                 GroupBy.DEPARTURE -> "按始发地"
                                 GroupBy.ARRIVAL -> "按终到地"
                                 GroupBy.TRAIN_TYPE -> "按车型"
@@ -241,19 +242,24 @@ fun TrainTicketList(
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .clickable {
-                                        selectedGroup.value = group
+                                        selectedGroup.value = group.toString()
                                         currentTicketIndex.value = 0
                                     }
                                     .padding(16.dp),
                                 horizontalArrangement = Arrangement.SpaceBetween,
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
+                               // 判断 group 是否为数字
+                                  Text(
+                                        text = if (group is Int) {
+                                            "第${group+1}组"
+                                        } else {
+                                            group.toString()
+                                        },
+                                        color = getDarkModeTextColor(context),
+                                        fontSize = 16.sp
+                                    )
 
-                                Text(
-                                    text = group ?: "未分组",
-                                    color = getDarkModeTextColor(context),
-                                    fontSize = 16.sp
-                                )
                                 Row(
                                     verticalAlignment = Alignment.CenterVertically,
                                 ) {
@@ -428,7 +434,7 @@ fun TrainTicketList(
                                     selectedGroup.value = null
                                     showGroupDialog.value = false
                                     if (groupBy == GroupBy.NONE) {
-                                        groupedTickets.value = null
+                                        groupedTickets.value = tickets.groupBy { it.id / 10 }
                                     } else {
                                         groupedTickets.value = tickets.groupBy { ticket ->
                                             when (currentGroupBy.value) {
@@ -442,7 +448,7 @@ fun TrainTicketList(
 
                                                 GroupBy.TRAIN_NUMBER -> ticket.trainNumber
                                                 GroupBy.PASSENGER -> ticket.passenger
-                                                else -> null
+                                                else -> ticket.id / 10
                                             }
                                         }
                                     }

@@ -154,7 +154,6 @@ class MoreSettingsActivity : ComponentActivity() {
     fun downfile2(context: Context) {
 
 
-
         // 读取目录下的文件
         val client = OkHttpClient() // 创建一个okhttp客户端对象
         // 创建一个GET方式的请求结构
@@ -249,9 +248,7 @@ class MoreSettingsActivity : ComponentActivity() {
                     },
                     modifier = Modifier
                         .fillMaxSize()
-                        .padding(
-                            top = 40.dp
-                        )) { innerPadding ->
+                        ) { innerPadding ->
                     Column(
                         modifier = Modifier
                             .padding(innerPadding)
@@ -594,22 +591,7 @@ class MoreSettingsActivity : ComponentActivity() {
                             }
 
 
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.SpaceBetween
-                            ) {
-                                Text(text = resources.getString(R.string.disable_default),
-                                    fontSize = 25.sp,
-                                    color = getDarkModeTextColor(this@MoreSettingsActivity))
 
-                                Switch(checked = disable_default.value, onCheckedChange = {
-                                    ConfigUtils.setSwitchConfig(this@MoreSettingsActivity,
-                                        "disable_default",it)
-                                    disable_default.value = it
-                                })
-
-                            }
 
                             Row(
                                 modifier = Modifier.fillMaxWidth(),

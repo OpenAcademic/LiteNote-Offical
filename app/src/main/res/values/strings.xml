@@ -112,37 +112,42 @@
     <string name="loading">Loading</string>
     <string name="llm_based_infos">When using LLM, you can parse it multiple times.</string>
     <string name="llm_model">LLM Model</string>
-    <string name="DARK_MODE">深色模式</string>
-    <string name="disable_default">关闭默认规则</string>
-    <string name="empty">Empty</string>
-    <string name="yanzhengma">开启验证码识别</string>
-    <string name="yanzhengma_info">在类原生系统中，验证码不会被自动检测到。开启该功能，将自动为您识别短信中的验证码。您的验证码信息不会被上传。</string>
-    <string name="title_activity_post_card">驿站卡片</string>
-    <string name="miui_widget_description">展示最近待取的包裹总数</string>
-    <string name="title_activity_help_llmactivity">HelpLLMActivity</string>
-    <string name="help_llm">帮助改善大模型</string>
-    <string name="help_llm_desc">为了进一步增强大模型的识别能力，现征集相关数据集。您提供的数据将用于改进模型的识别准确率。</string>
-    <string name="input_msg">输入短信内容</string>
-    <string name="input_code">输入取件码</string>
-    <string name="input_station">输入驿站名称</string>
-    <string name="input_address">输入驿站地址</string>
-    <string name="input_company">输入快递公司</string>
-    <string name="submit">提交数据</string>
+    <string name="empty" translatable="false">Empty</string>
+    <string name="yanzhengma">"Enable Captcha Recognition "</string>
+    <string name="yanzhengma_info">In a class-native system, the captcha is not automatically detected. If this function is enabled, the verification code in the SMS message is automatically identified for you. Your verification code information will not be uploaded.</string>
+    <string name="title_activity_post_card">Post card</string>
+    <string name="miui_widget_description">"Displays the total number of packages pending collection recently "</string>
+    <string name="title_activity_help_llmactivity" translatable="false">HelpLLMActivity</string>
+    <string name="help_llm">"Help improve large models "</string>
+    <string name="help_llm_desc">In order to further enhance the recognition ability of large models, relevant data sets are now collected. The data you provide will be used to improve the identification accuracy of the model.</string>
+    <string name="input_msg">Enter SMS content</string>
+    <string name="input_code">Enter the pick-up code</string>
+    <string name="input_station">"Enter the station name "</string>
+    <string name="input_address">"Enter the Courier address "</string>
+    <string name="input_company">"Import express company "</string>
+    <string name="submit">submit data</string>
     <string name="title_activity_about">AboutActivity</string>
-    <string name="open_source_t">开源仓库</string>
     <string name="product">Product</string>
     <string name="title_activity_add_product" translatable="false">AddProductActivity</string>
     <string name="title_activity_add_maintenance" translatable="false">AddMaintenanceActivity</string>
-    <string name="tickets">火车票收藏</string>
     <string name="title_activity_add_train_ticket">AddTrainTicketActivity</string>
-    <string name="train_tickets">火车票</string>
-    <string name="product_view_style">产品管理展示风格</string>
-    <string name="product_view_style_list">列表视图</string>
-    <string name="product_view_style_grid">卡片视图</string>
-    <string name="note">笔记</string>
     <string name="title_sub_activity_help_llmactivity">NoteEditActivity</string>
-    <string name="add_ticket">添加车票</string>
+    <string name="add_ticket">Add ticket</string>
     <string name="title_activity_more">MoreActivity</string>
-    <string name="more_action">更多功能</string>
-    <string name="train_ticket">车票收藏</string>
+    <string name="more_action">More Functions</string>
+    <string name="title_activity_help2" translatable="false">HelpActivity2</string>
+    <string name="configure">Configure</string>
+    <string name="title_activity_log_detail" translatable="false">LogDetailActivity</string>
+    <string name="DARK_MODE">Dark Mode</string>
+    <string name="disable_default">Disable default rule</string>
+    <string name="open_source_t">"OpenSource repository "</string>
+    <string name="tickets">Train ticket collection</string>
+    <string name="train_tickets">Railway ticket</string>
+    <string name="product_view_style">"Product management presentation style "</string>
+    <string name="product_view_style_grid">Card</string>
+    <string name="product_view_style_list">List</string>
+    <string name="note">Note</string>
+    <string name="train_ticket">Ticket collection</string>
+    <string name="help_me">Help center</string>
+    <string name="app_name_product">"Light note · Desktop products "</string>
 </resources>

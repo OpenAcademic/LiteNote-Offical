@@ -1,15 +1,17 @@
-
 <LinearLayout
 
     xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     style="@style/Widget.LiteNote.AppWidget.Container"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="horizontal"
     android:theme="@style/Theme.LiteNote.AppWidgetContainer"
-    android:background="@drawable/island"
+    android:background="@drawable/desktop1"
     android:padding="@dimen/widget_root_padding"
-    android:id="@+id/back">
+    app:layout_constraintCircleRadius="32dp"
+    app:circularflow_radiusInDP="32dp"
+    android:id="@android:id/background">
 
     <LinearLayout
         android:id="@+id/widget_content"
@@ -17,7 +19,7 @@
         android:orientation="vertical"
         android:layout_gravity="center"
         android:gravity="center"
-        android:background="@drawable/subisland"
+        android:background="@drawable/desktop2"
         android:layout_height="match_parent">
         <TextView
             android:id="@+id/sum"

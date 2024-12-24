@@ -171,13 +171,14 @@ fun CodeFormatCard(
 @Composable
 fun ExpressView(
     context: Context,
+    modifier: Modifier = Modifier,
     formats: List<Express>,
     formatsNum : MutableState<Int>,
     refresh : () -> Unit
 ){
     val showDialog = remember { mutableStateOf(false) }
     val deleteID = remember { mutableStateOf(0L) }
-    Scaffold(modifier = Modifier.fillMaxSize(),
+    Scaffold(modifier = modifier.fillMaxSize(),
         floatingActionButton = {
             IconButton(
                 onClick = {
