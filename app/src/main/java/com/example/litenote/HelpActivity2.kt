@@ -63,7 +63,7 @@ fun HelpPage(modifier: Modifier = Modifier) {
 
         Text(text = "1. 检查自启动是否开启")
         Image(
-            painter = painterResource(id = R.mipmap.p1),
+            painter = painterResource(id = R.mipmap.np1),
             contentDescription = "检查自启动",
             contentScale = androidx.compose.ui.layout.ContentScale.Crop,
             modifier = Modifier

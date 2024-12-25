@@ -46,6 +46,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
+import com.example.litenote.entity.SubmitCostType
+import com.example.litenote.entity.getSubmitCostTypes
 import com.example.litenote.ui.theme.LiteNoteTheme
 import com.example.litenote.utils.ConfigUtils
 import com.example.litenote.utils.FileSizeUtil
@@ -114,6 +116,7 @@ class MoreSettingsActivity : ComponentActivity() {
             this@MoreSettingsActivity,
             "yanzhengma"
         )
+        costType.value = ConfigUtils.getCostType(this@MoreSettingsActivity)
         settings.clear()
         settings.add(
             SettingItems(
@@ -133,6 +136,8 @@ class MoreSettingsActivity : ComponentActivity() {
     val file_isExist = mutableStateOf(false)
     val lora_file_isExist = mutableStateOf(false)
     val homeType = mutableStateOf(HomeType.CODE)
+    val costType = mutableStateOf(SubmitCostType.CNY)
+
     val max_size = mutableStateOf(0L)
     val curr_size = mutableStateOf(0)
 
@@ -442,7 +447,6 @@ class MoreSettingsActivity : ComponentActivity() {
                             Text(text = "首页展示项目", fontSize = 25.sp)
                             val showHomeItemsDialog = remember { mutableStateOf(false) }
 
-
                             Row(
                                 modifier = Modifier
                                     .fillMaxWidth()
@@ -462,6 +466,7 @@ class MoreSettingsActivity : ComponentActivity() {
                                         HomeType.PRODUCT -> "产品管理"
                                         HomeType.TRAIN_TICKET -> "车票收藏"
                                         HomeType.NOTE -> "笔记"
+                                        HomeType.SUBSCIPTION -> "订阅记录"
                                         else -> "笔记"
                                     },
                                     fontSize = 14.sp,
@@ -491,7 +496,8 @@ class MoreSettingsActivity : ComponentActivity() {
                                                 "取件码" to HomeType.CODE,
                                                 "产品管理" to HomeType.PRODUCT,
                                                 "车票收藏" to HomeType.TRAIN_TICKET,
-                                                "笔记" to HomeType.NOTE
+                                                "笔记" to HomeType.NOTE,
+                                                "订阅记录" to HomeType.SUBSCIPTION
                                             )
                                             items.forEach { (name, key) ->
                                                 Row(
@@ -527,6 +533,101 @@ class MoreSettingsActivity : ComponentActivity() {
                                     },
 
                                 )
+                            }
+                        }
+
+                        Column(
+                            verticalArrangement = Arrangement.Center,
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(15.dp)
+                                .background(
+                                    color = getDarkModeBackgroundColor(
+                                        this@MoreSettingsActivity, 1
+                                    ),
+                                    shape = MaterialTheme.shapes.medium
+                                )
+                                .padding(15.dp)
+                                .clip(RoundedCornerShape(15.dp))
+                        ) {
+                            Text(text = "订阅记录货币类型", fontSize = 25.sp)
+                            val showTypeDialog = remember { mutableStateOf(false) }
+
+
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clickable { showTypeDialog.value = true }
+                                    .padding(vertical = 8.dp),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = "货币类型",
+                                    fontSize = 16.sp,
+                                    color = getDarkModeTextColor(this@MoreSettingsActivity)
+                                )
+                                Text(
+                                    text = costType.value.char,
+                                    fontSize = 14.sp,
+                                    color = getDarkModeTextColor(this@MoreSettingsActivity).copy(alpha = 0.6f)
+                                )
+                            }
+
+                            if (showTypeDialog.value) {
+                                Dialog(
+                                    onDismissRequest = { showTypeDialog.value = false },
+                                    content = {
+                                        Column(
+                                            modifier = Modifier
+                                                .background(
+                                                    color = getDarkModeBackgroundColor(
+                                                        this@MoreSettingsActivity, 1
+                                                    ),
+                                                    shape = MaterialTheme.shapes.medium
+                                                )
+                                                .padding(15.dp)
+                                                .clip(RoundedCornerShape(15.dp)
+                                                ),
+                                            verticalArrangement = Arrangement.Center,
+                                            horizontalAlignment = Alignment.CenterHorizontally
+                                        ) {
+
+                                            getSubmitCostTypes().forEach { item ->
+                                                Row(
+                                                    modifier = Modifier
+                                                        .fillMaxWidth()
+                                                        .padding(vertical = 8.dp),
+                                                    verticalAlignment = Alignment.CenterVertically
+                                                ) {
+                                                    Row(
+                                                        modifier = Modifier
+                                                            .fillMaxWidth().clickable {
+                                                                costType.value = item
+                                                                ConfigUtils.setCostType(
+                                                                    this@MoreSettingsActivity,
+                                                                    item
+                                                                )
+                                                                showTypeDialog.value = false
+                                                            },
+                                                        verticalAlignment = Alignment.CenterVertically,
+                                                        horizontalArrangement = Arrangement.Start
+                                                    ){
+                                                        Text(
+                                                            text = item.char,
+                                                            fontSize = 24.sp,
+                                                            color = getDarkModeTextColor(this@MoreSettingsActivity),
+                                                            fontWeight = androidx.compose.ui.text.font.FontWeight.Bold
+                                                        )
+                                                    }
+
+                                                }
+                                            }
+                                        }
+                                    },
+
+                                    )
                             }
                         }
                         Column(

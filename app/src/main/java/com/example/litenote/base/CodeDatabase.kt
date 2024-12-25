@@ -23,6 +23,7 @@ import com.example.litenote.dao.NoteDao
 import com.example.litenote.dao.PortsDao
 import com.example.litenote.dao.ProductDao
 import com.example.litenote.dao.ProductMaintenanceDao
+import com.example.litenote.dao.SubmitDao
 import com.example.litenote.dao.TrainTicketDao
 import com.example.litenote.entity.*
 import com.google.gson.Gson
@@ -39,8 +40,12 @@ import com.google.gson.Gson
                         TrainTicket::class,
                         NoteCategory::class,
                         Note::class,
-                        NoteBlock::class
-                     ], version = 12, exportSchema = false)
+                        NoteBlock::class,
+                        SubmitVIPEntity::class,
+
+
+
+                     ], version = 13, exportSchema = false)
 abstract class CodeDatabase : RoomDatabase() {
 
     abstract fun codeDao(): CodeDao
@@ -55,7 +60,7 @@ abstract class CodeDatabase : RoomDatabase() {
     abstract fun noteCategoryDao(): NoteCategoryDao
     abstract fun noteDao(): NoteDao
     abstract fun noteBlockDao(): NoteBlockDao
-
+    abstract fun submitVIPEntityDao(): SubmitDao
 
     companion object {
         @Volatile
@@ -91,6 +96,10 @@ abstract class CodeDatabase : RoomDatabase() {
                         createEmptyMIgration(10, 11)
                     ).addMigrations(
                         createEmptyMIgration(11, 12)
+                    )
+                    .addMigrations(
+                        MIGRATION_12_13
+
                     )
                     .build()
                 INSTANCE = instance
@@ -370,3 +379,34 @@ val MIGRATION_11_12 = object : Migration(11, 12) {
     }
 }
 
+val MIGRATION_12_13 = object : Migration(12, 13) {
+    override fun migrate(database: SupportSQLiteDatabase) {
+        // @Entity(tableName = "submit")
+        //data class SubmitVIPEntity(
+        //    @PrimaryKey(autoGenerate = true)
+        //    val pid: Int,                // 订阅ID
+        //    val name: String,            // 订阅名字
+        //    val cost: Double,            // 订阅花费
+        //    val costType: Int,            // 订阅花费类型, 0:人民币, 1:美元
+        //    val createTime: Long,        // 创建时间
+        //    val lastTime: Long,        // 上一次续费时间
+        //    val cycle: Int,            // 订阅周期,单位天
+        //    val status: Int,            // 订阅状态
+        //)
+        // 添加订阅表
+        database.execSQL("""
+            CREATE TABLE IF NOT EXISTS submit (
+                id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                name TEXT NOT NULL,
+                name_from TEXT NOT NULL,
+                cost REAL NOT NULL,
+                costType INTEGER NOT NULL,
+                createTime INTEGER NOT NULL,
+                lastTime INTEGER NOT NULL,
+                cycle INTEGER NOT NULL,
+                status INTEGER NOT NULL
+            )
+        """)
+
+    }
+}

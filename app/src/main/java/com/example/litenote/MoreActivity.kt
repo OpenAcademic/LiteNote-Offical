@@ -6,6 +6,7 @@ package com.example.litenote
  *
  */
 
+import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.util.Log
@@ -47,6 +48,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
@@ -58,11 +60,13 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.input.pointer.positionChanged
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
+import androidx.glance.LocalContext
 import com.example.litenote.base.CodeDatabase
 import com.example.litenote.dbutils.CodeDBUtils
 import com.example.litenote.dbutils.CodeDetailUtils
@@ -71,14 +75,21 @@ import com.example.litenote.dbutils.LogDBUtils
 import com.example.litenote.dbutils.OverLookOBJ
 import com.example.litenote.dbutils.PortDao
 import com.example.litenote.entity.Code
+import com.example.litenote.entity.HuiLvEntity
 import com.example.litenote.entity.Note
 import com.example.litenote.entity.NoteCategory
 import com.example.litenote.entity.Product
 import com.example.litenote.entity.ProductMaintenance
+import com.example.litenote.entity.Rates
+import com.example.litenote.entity.SubmitCostType
+import com.example.litenote.entity.SubmitVIPEntity
 import com.example.litenote.entity.TrainTicket
+import com.example.litenote.entity.getSubmitCostTypeByInt
+import com.example.litenote.entity.rates2map
 import com.example.litenote.service.MessageService
 import com.example.litenote.sub.AddCodeActivity
 import com.example.litenote.sub.NoteEditActivity
+import com.example.litenote.sub.SubscribeAddActivity
 import com.example.litenote.ui.theme.LiteNoteTheme
 import com.example.litenote.utils.ConfigUtils
 import com.example.litenote.utils.DeviceUtils
@@ -93,6 +104,7 @@ import com.example.litenote.widget.EditorView
 import com.example.litenote.widget.EmptyView
 import com.example.litenote.widget.HomePages
 import com.example.litenote.widget.HomePortObj
+import com.example.litenote.widget.LoadingView
 import com.example.litenote.widget.MyDialog
 import com.example.litenote.widget.NoteCard
 import com.example.litenote.widget.NoteHeader
@@ -105,7 +117,13 @@ import com.example.litenote.widget.ProductCard
 import com.example.litenote.widget.ProductList
 import com.example.litenote.widget.ProductPages
 import com.example.litenote.widget.SortType
+import com.example.litenote.widget.SubscribeView
 import com.example.litenote.widget.TrainTicketList
+import com.google.gson.Gson
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import java.io.IOException
+import java.math.BigDecimal
 import java.util.Properties
 import kotlin.concurrent.thread
 
@@ -166,7 +184,44 @@ class MoreActivity : ComponentActivity() {
             }
         }
     }
+    val rates = mutableStateOf<Rates?>(null)
+    fun getLastHUILu(
+        context: Context
+    ) {
+        // 请求 https://api.exchangerate-api.com/v4/latest/ 获取汇率
+        // 获取汇率后，根据汇率计算出最新的汇率
+        // 使用 OKHttp 请求
+        // 请求成功后，使用 Gson 解析数据
+        // 获取汇率
+        // 读取目录下的文件
+        val client = OkHttpClient() // 创建一个okhttp客户端对象
+        rates.value = ConfigUtils.getLastHuiLu(context)
 
+        // 创建一个GET方式的请求结构
+        val request: Request = Request.Builder().url(
+            "https://api.exchangerate-api.com/v4/latest/" + ConfigUtils.getCostType(context).symbol2
+        ).build()
+        val call = client.newCall(request) // 根据请求结构创建调用对象
+        call.enqueue(object : okhttp3.Callback {
+            override fun onResponse(call: okhttp3.Call, response: okhttp3.Response) {
+                val body = response.body?.string() // 获取响应数据
+                val obj = Gson().fromJson(body, HuiLvEntity::class.java)
+                val rate = obj.rates
+                if (rate != null) {
+                    // 保存到 缓存
+                    ConfigUtils.saveLastHuiLu(context, Gson().toJson(rate))
+                    rates.value = rate
+                }
+                println("onResponse: $body")
+            }
+            override fun onFailure(call: okhttp3.Call, e: IOException) {
+                println("onFailure: $e")
+            }
+
+        })
+
+
+    }
     private fun initDb() {
         val lists = List<String>(1) { "34555553" }
 
@@ -331,6 +386,16 @@ class MoreActivity : ComponentActivity() {
 
 
         }
+        else if (currTag.value == 6) {
+            getLastHUILu(this@MoreActivity)
+            loadSubscribe()
+        }
+    }
+    val subscribeList = mutableStateListOf<SubmitVIPEntity>()
+    fun loadSubscribe() {
+        val db = CodeDatabase.getDatabase(this)
+        subscribeList.clear()
+        subscribeList.addAll(db.submitVIPEntityDao().getAll())
     }
     private fun initKds() {
         var demoList = listOf(
@@ -413,6 +478,7 @@ class MoreActivity : ComponentActivity() {
                                         2 -> resources.getString(R.string.overview)
                                         3 -> resources.getString(R.string.product)
                                         4 -> resources.getString(R.string.train_ticket)
+                                        6 -> resources.getString(R.string.submit_view)
                                         else -> resources.getString(R.string.app_name)
                                     },
                                     color = getDarkModeTextColor(this@MoreActivity),
@@ -703,10 +769,35 @@ class MoreActivity : ComponentActivity() {
                                     }
                                 }
 
-                            }else if (currTag.value == 0){
+                            }
+                            else if (currTag.value == 0){
                                 IconButton(
                                     onClick = {
                                         val intent = Intent(this@MoreActivity, NoteEditActivity::class.java)
+                                        startActivity(intent)
+                                    },
+                                    modifier = Modifier
+                                        .size(90.dp)
+                                        .padding(5.dp)
+                                        .background(
+                                            getDarkModeBackgroundColor(
+                                                context = this@MoreActivity,
+                                                level = 1
+                                            ),
+                                            shape = MaterialTheme.shapes.extraLarge
+
+                                        )
+                                        .padding(5.dp)
+                                ) {
+                                    Icon(imageVector = Icons.Default.Add,
+                                        contentDescription = "menu")
+                                }
+                            }
+                            else if (currTag.value == 6){
+
+                                IconButton(
+                                    onClick = {
+                                        val intent = Intent(this@MoreActivity, SubscribeAddActivity::class.java)
                                         startActivity(intent)
                                     },
                                     modifier = Modifier
@@ -1209,34 +1300,6 @@ class MoreActivity : ComponentActivity() {
                                     }
                                 )
                             }
-                            2 -> AnimatedVisibility(visible = currTag.value==2) {
-                                // do something
-                                if (overLookOBJ.value!=null) {
-                                    OverPage(
-                                        context = this@MoreActivity,
-                                        backgroundColor = getDarkModeBackgroundColor(
-                                            this@MoreActivity, 0
-                                        ),
-                                        subBackgroundColor = getDarkModeBackgroundColor(
-                                            this@MoreActivity, 1
-                                        ),
-                                        fontColor = getDarkModeTextColor(this@MoreActivity),
-                                        hots = overLookOBJ.value!!.barPoint,
-                                        allNums = listOf(
-                                            overLookOBJ.value!!.allNums,
-                                            overLookOBJ.value!!.dqj,
-                                            overLookOBJ.value!!.yqj
-                                        ),
-                                        resources = resources,
-                                        noteCount = db.noteDao().getNoteCount(),
-                                        categoryCount = db.noteCategoryDao().getCategoryCount(),
-                                        productCount = db.productDao().getProductCount(),
-                                        ticketCount = db.trainTicketDao().getTicketCount()
-                                    )
-                                } else {
-                                    EmptyView(getDarkModeTextColor(this@MoreActivity))
-                                }
-                            }
                             3 -> AnimatedVisibility(visible = currTag.value==3) {
                                 val deviceStyle = remember {
                                     mutableStateOf(ConfigUtils.checkSwitchConfig(this@MoreActivity,"product_view_style"))
@@ -1289,9 +1352,43 @@ class MoreActivity : ComponentActivity() {
                                     }
                                 )
                             }
-                            5 -> AnimatedVisibility(visible = currTag.value==5){
-                                // do something
-                                SettingsPage(context = this@MoreActivity, settingItems = settings, resources = resources)
+                            6 -> AnimatedVisibility(visible = currTag.value==6){
+                                if (rates.value!=null) {
+
+                                    // do something
+                                    SubscribeView(
+                                        context = this@MoreActivity,
+                                        onClick = { item ->
+
+
+                                        },
+                                        onEdit = { item ->
+                                            val intent = Intent(
+                                                this@MoreActivity,
+                                                SubscribeAddActivity::class.java
+                                            )
+                                            intent.putExtra("editMode", true)
+
+                                            intent.putExtra("name", item.name)
+                                            intent.putExtra("name_from", item.name_from)
+                                            intent.putExtra("cost", item.cost)
+                                            intent.putExtra("cost_type", item.costType)
+                                            intent.putExtra("cycle", item.cycle)
+                                            intent.putExtra("last_time", item.lastTime)
+                                            intent.putExtra("id", item.id)
+                                            startActivity(intent)
+                                        },
+                                        lists = subscribeList,
+                                        currentIndex = 0,
+                                        huilv = rates.value!!
+
+                                    )
+                                } else {
+                                    LoadingView(
+                                        context = this@MoreActivity,
+                                    )
+
+                                }
                             }
 
                         }

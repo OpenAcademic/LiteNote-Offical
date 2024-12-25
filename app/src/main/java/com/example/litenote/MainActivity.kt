@@ -6,6 +6,7 @@
  */
 package  com.example.litenote
 
+import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
@@ -89,14 +90,18 @@ import com.example.litenote.dbutils.PortDao
 import com.example.litenote.desktopwidget.MIUIDesktopProductWidgetConfigureActivity
 import com.example.litenote.entity.Code
 import com.example.litenote.entity.CodeFormat
+import com.example.litenote.entity.HuiLvEntity
 import com.example.litenote.entity.Note
 import com.example.litenote.entity.NoteCategory
 import com.example.litenote.entity.Product
 import com.example.litenote.entity.ProductMaintenance
+import com.example.litenote.entity.Rates
+import com.example.litenote.entity.SubmitVIPEntity
 import com.example.litenote.entity.TrainTicket
 import com.example.litenote.service.MessageService
 import com.example.litenote.sub.AddCodeActivity
 import com.example.litenote.sub.NoteEditActivity
+import com.example.litenote.sub.SubscribeAddActivity
 import com.example.litenote.ui.theme.LiteNoteTheme
 import com.example.litenote.utils.ConfigUtils
 import com.example.litenote.utils.DeviceUtils
@@ -111,6 +116,7 @@ import com.example.litenote.widget.EditorView
 import com.example.litenote.widget.EmptyView
 import com.example.litenote.widget.HomePages
 import com.example.litenote.widget.HomePortObj
+import com.example.litenote.widget.LoadingView
 import com.example.litenote.widget.MoreActionPage
 import com.example.litenote.widget.MyDialog
 import com.example.litenote.widget.MyNavigationBarItem
@@ -125,7 +131,12 @@ import com.example.litenote.widget.ProductCard
 import com.example.litenote.widget.ProductList
 import com.example.litenote.widget.ProductPages
 import com.example.litenote.widget.SortType
+import com.example.litenote.widget.SubscribeView
 import com.example.litenote.widget.TrainTicketList
+import com.google.gson.Gson
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import java.io.IOException
 import java.util.Properties
 import kotlin.concurrent.thread
 
@@ -202,7 +213,7 @@ class MainActivity : ComponentActivity() {
             if (currTag.value != 0) {
                 settings.add(
                     SettingItems(
-                        R.string.note, 0, 0
+                        R.mipmap.np1, 0, 0
                     ) {
                         val intent = Intent(this@MainActivity, MoreActivity::class.java)
                         intent.putExtra("tag", 0)
@@ -213,7 +224,7 @@ class MainActivity : ComponentActivity() {
             if (currTag.value!=1) {
                 settings.add(
                     SettingItems(
-                        R.string.code_name, 0, 0
+                        R.mipmap.np5, 0, 0
                     ) {
                         val intent = Intent(this@MainActivity, MoreActivity::class.java)
                         intent.putExtra("tag", 1)
@@ -224,7 +235,7 @@ class MainActivity : ComponentActivity() {
             if (currTag.value!=3) {
                 settings.add(
                     SettingItems(
-                        R.string.product, 0, 0
+                        R.mipmap.np2, 0, 0
                     ) {
                         val intent = Intent(this@MainActivity, MoreActivity::class.java)
                         intent.putExtra("tag", 3)
@@ -235,7 +246,7 @@ class MainActivity : ComponentActivity() {
             if (currTag.value!=4) {
                 settings.add(
                     SettingItems(
-                        R.string.train_ticket, 0, 0
+                        R.mipmap.np3, 0, 0
                     ) {
                         val intent = Intent(this@MainActivity, MoreActivity::class.java)
                         intent.putExtra("tag", 4)
@@ -243,18 +254,25 @@ class MainActivity : ComponentActivity() {
                     }
                 )
             }
+            if (currTag.value!=6) {
+                settings.add(
+                    SettingItems(
+                        R.mipmap.np4, 0, 0
+                    ) {
+                        val intent = Intent(this@MainActivity, MoreActivity::class.java)
+                        intent.putExtra("tag", 6)
+                        startActivity(intent)
+                    }
+                )
+            }
 
 
 
-            // SettingItems(
-            //                    R.string.more_settings,0,0
-            //                ) {
-            //                    val intent = Intent(this@MainActivity, MoreSettingsActivity::class.java)
-            //                    startActivity(intent)
-            //                }
-        }else if (current_home_page.value == 2){
+        }
+        else if (current_home_page.value == 2){
             overLookOBJ.value = CodeDBUtils.loadOverlook(this@MainActivity)
-        }else if (current_home_page.value == 3){
+        }
+        else if (current_home_page.value == 3){
             settings.clear()
             // do something
             //var yz_nums = PortDao.getCount(this@MainActivity)
@@ -378,8 +396,48 @@ class MainActivity : ComponentActivity() {
         }
 
     }
+    val rates = mutableStateOf<Rates?>(null)
+    fun getLastHUILu(
+        context: Context
+    ) {
+        // 请求 https://api.exchangerate-api.com/v4/latest/ 获取汇率
+        // 获取汇率后，根据汇率计算出最新的汇率
+        // 使用 OKHttp 请求
+        // 请求成功后，使用 Gson 解析数据
+        // 获取汇率
+        // 读取目录下的文件
+        val client = OkHttpClient() // 创建一个okhttp客户端对象
+        rates.value = ConfigUtils.getLastHuiLu(context)
+
+        // 创建一个GET方式的请求结构
+        val request: Request = Request.Builder().url(
+            "https://api.exchangerate-api.com/v4/latest/" + ConfigUtils.getCostType(context).symbol2
+        ).build()
+        val call = client.newCall(request) // 根据请求结构创建调用对象
+        call.enqueue(object : okhttp3.Callback {
+            override fun onResponse(call: okhttp3.Call, response: okhttp3.Response) {
+                val body = response.body?.string() // 获取响应数据
+                val obj = Gson().fromJson(body, HuiLvEntity::class.java)
+                val rate = obj.rates
+                if (rate != null) {
+                    // 保存到 缓存
+                    ConfigUtils.saveLastHuiLu(context, Gson().toJson(rate))
+                    rates.value = rate
+                }
+                println("onResponse: $body")
+            }
+
+            override fun onFailure(call: okhttp3.Call, e: IOException) {
+                println("onFailure: $e")
+            }
+
+        })
+
+
+    }
     private fun initDb2() {
         val lists = List<String>(1) { "34555553" }
+
 
         if (currTag.value == 0) {
             notes.clear()
@@ -437,6 +495,16 @@ class MainActivity : ComponentActivity() {
 
 
         }
+        else if (currTag.value == 6) {
+            getLastHUILu(this@MainActivity)
+            loadSubscribe()
+        }
+    }
+    val subscribeList = mutableStateListOf<SubmitVIPEntity>()
+    fun loadSubscribe() {
+        val db = CodeDatabase.getDatabase(this)
+        subscribeList.clear()
+        subscribeList.addAll(db.submitVIPEntityDao().getAll())
     }
     private fun initKds() {
         var demoList = listOf(
@@ -595,7 +663,8 @@ class MainActivity : ComponentActivity() {
                                 // 导航栏
                                 NavigationBar(
                                     modifier = Modifier
-                                        .fillMaxWidth().height(100.dp)
+                                        .fillMaxWidth()
+                                        .height(100.dp)
                                         .padding(
                                             bottom = 20.dp,
                                             start = 15.dp,
@@ -968,10 +1037,34 @@ class MainActivity : ComponentActivity() {
                                         }
                                     }
 
-                                }else if (currTag.value == 0){
+                                }
+                                else if (currTag.value == 0){
                                     IconButton(
                                         onClick = {
                                             val intent = Intent(this@MainActivity, NoteEditActivity::class.java)
+                                            startActivity(intent)
+                                        },
+                                        modifier = Modifier
+                                            .size(90.dp)
+                                            .padding(5.dp)
+                                            .background(
+                                                getDarkModeBackgroundColor(
+                                                    context = this@MainActivity,
+                                                    level = 1
+                                                ),
+                                                shape = MaterialTheme.shapes.extraLarge
+
+                                            )
+                                            .padding(5.dp)
+                                    ) {
+                                        Icon(imageVector = Icons.Default.Add,
+                                            contentDescription = "menu")
+                                    }
+                                }
+                                else if (currTag.value == 6){
+                                    IconButton(
+                                        onClick = {
+                                            val intent = Intent(this@MainActivity, SubscribeAddActivity::class.java)
                                             startActivity(intent)
                                         },
                                         modifier = Modifier
@@ -1559,6 +1652,38 @@ class MainActivity : ComponentActivity() {
                                 5 -> AnimatedVisibility(visible = currTag.value==5){
                                     // do something
                                     SettingsPage(context = this@MainActivity, settingItems = settings, resources = resources)
+                                }
+                                6 -> AnimatedVisibility(visible = currTag.value==6) {
+                                    if (rates.value!=null) {
+                                        SubscribeView(
+                                            context = this@MainActivity,
+                                            onClick = { item ->
+
+
+                                            },
+                                            onEdit = { item ->
+                                                val intent = Intent(this@MainActivity, SubscribeAddActivity::class.java)
+                                                intent.putExtra("editMode", true)
+
+                                                intent.putExtra("name", item.name)
+                                                intent.putExtra("name_from", item.name_from)
+                                                intent.putExtra("cost", item.cost)
+                                                intent.putExtra("cost_type", item.costType)
+                                                intent.putExtra("cycle", item.cycle)
+                                                intent.putExtra("last_time", item.lastTime)
+                                                intent.putExtra("id", item.id)
+                                                startActivity(intent)
+                                            },
+                                            lists = subscribeList,
+                                            currentIndex = 0,
+                                            huilv = rates.value!!
+
+                                        )
+                                    }
+                                    else {
+                                        LoadingView(this@MainActivity)
+
+                                    }
                                 }
                             }
                             1 -> AnimatedVisibility(visible = current_home_page.value==1) {

@@ -150,4 +150,6 @@
     <string name="train_ticket">Ticket collection</string>
     <string name="help_me">Help center</string>
     <string name="app_name_product">"Light note · Desktop products "</string>
+    <string name="submit_view">Subscription Record</string>
+    <string name="title_activity_subscribe_add" translatable="false">SubscribeAddActivity</string>
 </resources>
